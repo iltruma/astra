@@ -12,7 +12,7 @@
 #
 # SSH host key: gestita direttamente in /persist via services.openssh.hostKeys
 # (vedi common.nix) — nessun bind mount necessario, sshd legge da /persist diretto.
-# Solo ed25519: RSA è legacy, non ha senso mantenerla su un homelab moderno.
+# Solo ed25519: RSA è legacy, non ha senso mantenerla su astra.
 #
 # Tutto il resto (Technitium, k3s, /var) vive su tank/var e tank/volumes
 # che sono dataset ZFS separati e sopravvivono ai reboot indipendentemente.

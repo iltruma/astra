@@ -103,7 +103,7 @@ ssh -L 5380:127.0.0.1:5380 root@192.168.178.2
      - `https://big.oisd.nl/domainswild` (OISD)
 
 5. **Cache e TTL**:
-   - Default vanno bene per homelab
+   - Default vanno bene per astra
    - Cache: ~24h, TTL negativi: 5min
 
 ### Configurazione avanzata

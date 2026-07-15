@@ -25,14 +25,14 @@ ZFS è stato scelto per:
 
 > **Nota**: la cifratura ZFS (`tank/root` con AES-256-GCM + TPM2) è stata
 > **rimossa** (vedi `stack-decisions.md#d13--zfs-encryption-rimossa`). Su
-> homelab domestico il threat model furto fisico non è reale; la complessità
+> su astra il threat model furto fisico non è reale; la complessità
 > (TPM2, prompt al boot, modulo `zfs-tpm2.nix`) superava i benefici. ZFS resta
 > per snapshot, CoW, compressione. Dataset cifrati specifici (es.
 > `tank/secrets`) restano una possibile evoluzione futura senza impatto sul
 > boot.
 
 Alternativa scartata: **ext4 + LUKS** — più semplice ma senza snapshot,
-senza compressione, senza datasets. Per un homelab con 500 GB e un solo disco,
+senza compressione, senza datasets. Per nebula (500 GB, un solo disco),
 ZFS è overkill solo in apparenza: il costo in RAM (~50 MB) e la complessità
 sono minimi rispetto ai benefici.
 

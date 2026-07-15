@@ -24,7 +24,7 @@ alternative scartate e rischio a lungo termine. Ogni decisione ha uno stato:
 | D10  | Backup rclone → Cloudflare R2        | 🟢 applicato | systemd timer NixOS |
 | D11  | Alerting channel (ntfy)              | 🔴 proposto | Beszel + Uptime Kuma → ntfy |
 | D12  | Dependency updates (Renovate)        | 🔴 proposto | Aggiornamenti automatici Helm chart, Nix packages |
-| D13  | ZFS encryption rimossa               | 🟢 applicato | No threat model reale su homelab; complessità TPM2 > benefici |
+| D13  | ZFS encryption rimossa               | 🟢 applicato | No threat model reale su astra; complessità TPM2 > benefici |
 
 ---
 
@@ -45,7 +45,7 @@ Il bootstrap Cilium su NixOS era fragile per tre ragioni:
 k3s ha Flannel integrato di default. Non richiede bootstrap esterno, niente
 dipendenze aggiuntive, niente servizi systemd custom.
 
-Su single-node homelab Flannel è più che sufficiente: routing L3 tra pod,
+Su astra (single-node) Flannel è più che sufficiente: routing L3 tra pod,
 niente eBPF/NetworkPolicy avanzate necessarie.
 
 ### Alternative future
@@ -132,7 +132,7 @@ disponibile. PV k3s vivono in `tank/volumes` (ZFS dataset).
 
 ### Problema
 
-ArgoCD ha tre criticità per un homelab GitOps-puro single-developer:
+ArgoCD ha tre criticità per una fleet GitOps-pura single-developer:
 1. **RAM**: ~500 MB idle (API server + Redis + Dex + controller)
 2. **Drift via UI**: la dashboard permette click-ops che bypassano Git
 3. **SOPS**: richiede plugin esterno (argocd-vault-plugin)
@@ -150,7 +150,7 @@ ArgoCD ha tre criticità per un homelab GitOps-puro single-developer:
 ### Trade-off accettato
 
 Nessuna web UI nativa. Per debug: `flux get all`, `kubectl describe kustomization`,
-`flux logs`. Per un homelab single-developer la CLI è sufficiente.
+`flux logs`. Per una fleet single-developer la CLI è sufficiente.
 
 ### Rischio a lungo termine
 
@@ -399,7 +399,7 @@ Questo aggiungeva:
 
 ### Threat model reale
 
-Astra è un homelab domestico su rete casuale. Il rischio di furto fisico con
+Astra è una fleet domestica su rete casuale. Il rischio di furto fisico con
 attacco ai dati a disco è trascurabile. I dati sensibili (credenziali,
 certificati) sono già protetti da SOPS + age. La cifratura del filesystem di
 root non aggiungeva protezione pratica.

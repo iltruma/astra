@@ -1,9 +1,11 @@
 # Astra
 
-**Homelab as Code** su un singolo Dell Optiplex 3050 (i5-6500T, 16 GB RAM pianificato 32 GB, 500 GB SSD)
-con **NixOS baremetal** (no hypervisor). Tutto dichiarativo: OS e servizi in
-un flake NixOS, applicazioni in Kubernetes via GitOps (Flux CD), TLS pubblico
-via Let's Encrypt (DNS-01 Cloudflare), DNS interno via Technitium.
+**Fleet di casa**: Dell Optiplex 3050 (`nebula`, nodo principale) e
+Raspberry Pi 4 (`taiga`, satellite per stampante 3D) con **NixOS
+baremetal** (no hypervisor). Tutto dichiarativo: OS e servizi in
+un flake NixOS, applicazioni in Kubernetes via GitOps (Flux CD), TLS
+pubblico via Let's Encrypt (DNS-01 Cloudflare), DNS interno via
+Technitium.
 
 > Progetto anche **didattico**: si costruisce un pezzo alla volta, capendo cosa
 > fa. Il piano completo è in **[docs/roadmap.md](docs/roadmap.md)**.
@@ -52,7 +54,7 @@ L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
 ```
                    rete 192.168.178.0/24
   iris     .1  ─  Router Fritz!Box         (gateway)
-  nebula  .2  ─  NixOS baremetal
+  nebula  .2  ─  NixOS baremetal (nodo principale)
                   ├─ Technitium DNS         (servizio NixOS, porta 53)
                   ├─ k3s                    (servizio NixOS, porta 6443)
                    │   ├─ Traefik            (ingress 80/443, hostNetwork)
@@ -60,6 +62,9 @@ L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
                    │   ├─ Flux CD v2         (GitOps → k8s/clusters/dyson/)
                    │   └─ app (Fasi 2-4)
                   └─ systemd timer rclone   (backup → R2)
+
+  taiga  .43  ─  Raspberry Pi 4 (NixOS, satellite)
+                  └─ Klipper + Moonraker + Mainsail   (stampante 3D)
 ```
 
 Dominio: **`lab.paroparo.it`** (record locali in Technitium, wildcard
@@ -72,9 +77,10 @@ Per il setup completo dei servizi k3s vedi
 
 ## Prerequisiti hardware
 
-- **Dell Optiplex 3050** (i5-6500T, 16 GB RAM pianificato 32 GB, 500 GB SSD)
-- 1 disco: **SATA SSD 500 GB** (`/dev/sda`, OS NixOS + dataset ZFS)
-- Porta Ethernet + cavo di rete
+- **Nodo principale** — Dell Optiplex 3050 (i5-6500T, 16 GB RAM pianificato 32 GB, 500 GB SSD)
+  - 1 disco: **SATA SSD 500 GB** (`/dev/sda`, OS NixOS + dataset ZFS)
+  - Porta Ethernet + cavo di rete
+- **Nodo satellite** (opzionale, solo se usi la stampante 3D) — Raspberry Pi 4 con SD card ≥ 8 GB (label `NIXOS_SD`)
 - Workstation Linux/Mac/WSL con: `nix` (flakes abilitati), `git`, `ssh` (chiave ed25519)
 
 Per il partizionamento ZFS, dataset, layout storage e motivazioni vedi

@@ -21,7 +21,7 @@
     openssh.authorizedKeys.keys = import ./keys.nix;
   };
 
-  # Sudo senza password per il gruppo wheel (comodo per single-user homelab)
+  # Sudo senza password per il gruppo wheel (comodo per single-user astra)
   security.sudo.wheelNeedsPassword = false;
 
   # ── SSH server hardening ─────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
-# Astra Homelab — Roadmap
+# Astra — Roadmap
 
-Piano di costruzione del homelab, organizzato in **fasi** e **sprint**.
+Piano di costruzione della fleet, organizzato in **fasi** e **sprint**.
 Ogni sprint è atomico: lo si fa, lo si verifica (Definition of Done), si committa,
 si passa al successivo. Le dipendenze determinano l'ordine.
 
@@ -53,7 +53,7 @@ si passa al successivo. Le dipendenze determinano l'ordine.
 
 ## Fase 1 — Backbone
 
-L'ossatura del homelab. Va completata in ordine perché ogni pezzo sblocca i successivi.
+L'ossatura della fleet. Va completata in ordine perché ogni pezzo sblocca i successivi.
 
 | Sprint | Servizio       | Dove           | Stato | Dipende da |
 |--------|----------------|----------------|-------|------------|
@@ -220,7 +220,7 @@ bloccato dove atteso; DNS `lab.paroparo.it` risolve correttamente dai nuovi IP.
   SPAN sullo switch). Per copertura totale serve OPNsense su mini-PC dedicato
   tra Fritz!Box e switch.
 - **Tuning iniziale**: 200-500 falsi positivi attesi nelle prime 24h, da filtrare
-  con `disable.conf` (regole ET Open troppo aggressive per homelab). Target
+  con `disable.conf` (regole ET Open troppo aggressive per astra). Target
   operativo: 5-20 alert/giorno, 1-3 worth investigating.
 - **DoD**:
   - Container Suricata su `nebula` (tipo: nixos-container o podman),

@@ -1,6 +1,6 @@
 # Astra — Documentation Index
 
-Documentazione operativa del homelab, organizzata per argomento. Per il piano
+Documentazione operativa della fleet, organizzata per argomento. Per il piano
 completo vedi [`roadmap.md`](roadmap.md). Per le decisioni architetturali vedi
 [`stack-decisions.md`](stack-decisions.md).
 

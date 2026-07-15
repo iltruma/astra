@@ -19,7 +19,7 @@
 #   - nixos-anywhere: pinnato per riproducibilità; si invoca direttamente con nix run github:
 
 {
-  description = "Astra — NixOS homelab su Dell Optiplex 3050";
+  description = "Astra — NixOS fleet (Dell Optiplex 3050 + Raspberry Pi 4)";
 
   inputs = {
     # Pin nixpkgs al canale stable 25.11

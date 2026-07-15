@@ -13,7 +13,7 @@ k3s usa **Flannel** come CNI di default (bundled, nessun bootstrap esterno).
 La scelta precedente di Cilium è stata rimossa (vedi
 [stack-decisions.md#d1](stack-decisions.md#d1--flannel-bundled-k3s)) perché il bootstrap
 era fragile su NixOS (chicken-and-egg CNI, helm-diff plugin path non-standard,
-servizio systemd custom). Su single-node homelab Flannel è più che sufficiente.
+servizio systemd custom). Su astra (single-node) Flannel è più che sufficiente.
 
 Cilium può essere aggiunto via Flux HelmRelease in futuro quando il cluster è
 stabile.

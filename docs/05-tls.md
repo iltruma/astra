@@ -1,6 +1,6 @@
 # TLS: certificati con Let's Encrypt (DNS-01 + Cloudflare)
 
-I servizi web dell'homelab espongono HTTPS con certificati **pubblicamente
+I servizi web di astra espongono HTTPS con certificati **pubblicamente
 fidati**, emessi da **Let's Encrypt** e gestiti da **cert-manager** dentro k3s.
 Nessuna CA privata: i certificati sono validi su qualsiasi browser/OS senza
 installare nulla.
@@ -147,7 +147,7 @@ firmato da Let's Encrypt) si verifica in **S3**.
 - ➕ Wildcard unico per tutti i servizi; split-horizon tiene i servizi privati.
 - ➕ Il dominio su Cloudflare è già lì: DNS-01, Renovate, eventuale tunnel futuro condividono la stessa infrastruttura.
 - ➖ Dipendenza da internet e da Let's Encrypt per il rinnovo (automatico via
-  cert-manager). Non adatto a scenari air-gapped — irrilevante per questo homelab.
+  cert-manager). Non adatto a scenari air-gapped — irrilevante per astra.
 - ➖ I cert finiscono nei log di Certificate Transparency: usando **solo il
   wildcard** nei log appare `*.lab.paroparo.it`, non i nomi dei singoli servizi.
 
