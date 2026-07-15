@@ -123,7 +123,7 @@ L'implementazione vera vive in **S3**, dopo k3s. In sintesi:
 4. Le `Ingress` dei servizi referenziano quel Secret TLS.
 
 Tutti i manifest (`HelmRelease`, `ClusterIssuer`, `Certificate`) vivono in
-`k8s/infra/cert-manager/` e sono sincronizzati da Flux (`k8s/clusters/iss/`).
+`k8s/infra/cert-manager/` e sono sincronizzati da Flux (`k8s/clusters/dyson/`).
 
 ---
 
@@ -159,12 +159,12 @@ Il namespace `infra-proxy` espone tramite Traefik host fisici che non fanno part
 
 | Hostname | Backend | Note |
 |---|---|---|
-| `eos.lab.paroparo.it` | `192.168.178.2:80` | NixOS (HTTP, vari servizi host) |
+| `nebula.lab.paroparo.it` | `192.168.178.2:80` | NixOS (HTTP, vari servizi host) |
 | `iris.lab.paroparo.it` | `192.168.178.1:443` | Router Fritz!Box (HTTPS, self-signed) |
 
-> **Cambiamento post-migrazione**: Proxmox non c'è più, quindi `eos` non
+> **Cambiamento post-migrazione**: Proxmox non c'è più, quindi `nebula` non
 > espone più la UI Proxmox (8006). Sentinel (Technitium) gira sullo stesso
-> host di eos, non serve proxy separato.
+> host di nebula, non serve proxy separato.
 
 Ogni backend self-signed (es. Fritz!Box) usa un `ServersTransport` con
 `insecureSkipVerify: true`. Il certificato esposto al browser è sempre il

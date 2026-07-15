@@ -48,7 +48,7 @@ Questo abilita:
 ## Zone file (BIND)
 
 I record DNS sono versionati in Git come zona BIND:
-[`hosts/eos/dns-zone.lab.paroparo.it`](../hosts/eos/dns-zone.lab.paroparo.it)
+[`hosts/nebula/dns-zone.lab.paroparo.it`](../hosts/nebula/dns-zone.lab.paroparo.it)
 
 Per importare in Technitium dopo un reinstall:
 - *Zones → lab.paroparo.it → Import → seleziona il file*
@@ -88,7 +88,7 @@ ssh -L 5380:127.0.0.1:5380 root@192.168.178.2
    - IPv4 Address: `192.168.178.43`
    - Salva
    - Il wildcard coprirebbe anche `taiga`, ma il record esplicito ha priorità
-      e punta al Pi direttamente invece che a Traefik su Eos.
+      e punta al Pi direttamente invece che a Traefik su Nebula.
 
 3. **Upstream ricorsivi (DoH)**:
    - *Settings → DNS Client*
@@ -156,7 +156,7 @@ nel backup rclone notturno (vedi [03-backup.md](03-backup.md)).
 Restore:
 ```bash
 systemctl stop technitium-dns-server
-rclone sync r2:eos-backup/technitium/ /var/lib/technitium-dns-server/
+rclone sync r2:nebula-backup/technitium/ /var/lib/technitium-dns-server/
 systemctl start technitium-dns-server
 ```
 
@@ -173,7 +173,7 @@ aggiornare:
 
 ```bash
 nix flake update --commit nixpkgs
-nixos-rebuild switch --flake .#eos --target-host root@192.168.178.2
+nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
 ```
 
 Technitium non richiede migrazioni di state: ogni release mantiene

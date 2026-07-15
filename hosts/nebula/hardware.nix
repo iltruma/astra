@@ -1,4 +1,4 @@
-# hosts/eos/hardware.nix
+# hosts/nebula/hardware.nix
 #
 # Configurazione hardware-specific per Dell Optiplex 3050.
 #

@@ -1,12 +1,12 @@
 # hosts/installer/default.nix
 #
-# ISO NixOS minimale per installazione headless di Eos.
+# ISO NixOS minimale per installazione headless di Nebula.
 #
 # Cosa fa:
 #   - Parte dal modulo NixOS built-in installation-cd-minimal
 #   - Abilita SSH con la chiave pubblica di cosimo (da modules/keys.nix)
 #   - Configura IP statico 192.168.178.2/24 su enp1s0 al boot
-#     (niente DHCP: Eos ha IP fisso, vogliamo SSH subito e senza sorprese)
+#     (niente DHCP: Nebula ha IP fisso, vogliamo SSH subito e senza sorprese)
 #
 # Come buildare (dalla workstation):
 #   nix build .#nixosConfigurations.installer.config.system.build.isoImage
@@ -15,9 +15,9 @@
 # Come scrivere su USB:
 #   sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress conv=fsync
 #
-# Dopo il boot su Eos:
+# Dopo il boot su Nebula:
 #   ssh root@192.168.178.2
-#   nix run github:nix-community/nixos-anywhere -- --flake .#eos root@192.168.178.2
+#   nix run github:nix-community/nixos-anywhere -- --flake .#nebula root@192.168.178.2
 
 { modulesPath, lib, ... }:
 
@@ -36,7 +36,7 @@
 
   # ── Rete: IP statico su enp1s0 ───────────────────────────────────────────────
   # Niente NetworkManager/DHCP: vogliamo IP prevedibile al boot.
-  # enp1s0 è l'interfaccia ethernet di Eos (Dell Optiplex 3050, confermata).
+  # enp1s0 è l'interfaccia ethernet di Nebula (Dell Optiplex 3050, confermata).
   networking.useDHCP = false;
   networking.interfaces.enp1s0.ipv4.addresses = [
     {

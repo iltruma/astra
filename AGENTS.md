@@ -37,8 +37,8 @@ avere l'infrastruttura, ma capirla. Quindi:
 - Non proporre soluzioni che richiedano `sudo` se non strettamente necessario.
 - Se l'utente condivide un secret per errore, avvisalo immediatamente e
   consiglia rotazione.
-- Per gestire l'host NixOS (eos), operare via SSH da workstation.
-  Per applicare config: `nixos-rebuild switch --flake .#eos --target-host root@192.168.178.2`.
+- Per gestire l'host NixOS (nebula), operare via SSH da workstation.
+  Per applicare config: `nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2`.
 
 ## Tool e workflow
 
@@ -78,7 +78,7 @@ DNS come servizio NixOS nativo.
 
 ```
 flake.nix         - Entry point NixOS (pin nixpkgs, sops-nix, disko)
-hosts/eos/    - Config specifica del server (disko, hardware, networking)
+hosts/nebula/   - Config specifica del server (disko, hardware, networking)
 modules/          - Moduli NixOS riusabili (common, technitium, k3s, backup)
 secrets/          - Secret host cifrati con SOPS (*.enc.yaml)
 k8s/              - Manifesti GitOps (Flux) — invariato dalla migrazione
@@ -89,11 +89,11 @@ docs/             - Documentazione step-by-step (roadmap, decisioni, migration)
 ## Comandi utili
 
 ```bash
-# Build/apply NixOS (da workstation, contro eos remoto)
+# Build/apply NixOS (da workstation, contro nebula remoto)
 nix flake check
-nixos-rebuild switch --flake .#eos --target-host root@192.168.178.2
+nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
 
-# k3s (via SSH su eos)
+# k3s (via SSH su nebula)
 ssh root@192.168.178.2
 k3s kubectl get nodes
 k3s kubectl get pods -A
@@ -134,7 +134,7 @@ refactor struttura repo).
 ## Network
 
 - Iris (gateway/router Fritz!Box): 192.168.178.1
-- Eos (NixOS host): 192.168.178.2
+- Nebula (NixOS host): 192.168.178.2
   - Servizi esposti: k3s API (.6443), DNS (.53), HTTP (.80), HTTPS (.443)
   - k3s gira come servizio sullo stesso host (no VM separata)
   - Technitium DNS gira come servizio NixOS (no LXC separato)

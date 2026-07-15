@@ -4,7 +4,7 @@
 #
 # IP statico: 192.168.178.43 (attuale su MainsailOS, mantenuto per coerenza)
 # Gateway: 192.168.178.1 (Fritz!Box iris)
-# DNS: 192.168.178.2 (Technitium su eos)
+# DNS: 192.168.178.2 (Technitium su nebula)
 
 { ... }:
 
@@ -21,7 +21,7 @@
     ];
     defaultGateway = "192.168.178.1";
     nameservers = [
-      "192.168.178.2"  # Technitium eos
+      "192.168.178.2"  # Technitium nebula
       "1.1.1.1"        # fallback
     ];
 

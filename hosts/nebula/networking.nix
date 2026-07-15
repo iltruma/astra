@@ -1,11 +1,11 @@
-# hosts/eos/networking.nix
+# hosts/nebula/networking.nix
 #
-# Configurazione rete per eos.
+# Configurazione rete per nebula.
 #
 # Topologia rete:
 #   rete 192.168.178.0/24
 #   - iris (gateway Fritz!Box): 192.168.178.1
-#   - eos (questo host):    192.168.178.2
+#   - nebula (questo host):    192.168.178.2
 #       ├─ Technitium DNS       (porta 53)
 #       ├─ k3s API              (porta 6443)
 #       └─ Traefik ingress      (porte 80/443)
@@ -17,7 +17,7 @@
 
 {
   # ── Hostname ─────────────────────────────────────────────────────────────────
-  networking.hostName = "eos";
+  networking.hostName = "nebula";
 
   networking.useDHCP = false;
   networking.interfaces.enp1s0.ipv4.addresses = [

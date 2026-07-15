@@ -18,7 +18,7 @@ data:
     - Infrastructure:
         - Technitium:
             href: https://192.168.178.2:5380
-            description: DNS server (eos)
+            description: DNS server (nebula)
             icon: technitium.png
         - Flux:
             href: https://github.com/iltruma/astra

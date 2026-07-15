@@ -1,8 +1,8 @@
-# hosts/eos/disko.nix
+# hosts/nebula/disko.nix
 #
 # Partizionamento ZFS dichiarativo per il disco principale.
 # Eseguito UNA volta durante l'installazione:
-#   nix run github:nix-community/disko -- --mode disko hosts/eos/disko.nix
+#   nix run github:nix-community/disko -- --mode disko hosts/nebula/disko.nix
 #
 # Layout (Dell Optiplex 3050, 500 GB SSD):
 #   /dev/sda
@@ -20,8 +20,8 @@
 # si aggiunge come dataset separato senza impatto sul boot.
 #
 # Per reinstallare da zero:
-#   nix run github:nix-community/disko -- --mode disko hosts/eos/disko.nix
-#   nixos-install --flake .#eos
+#   nix run github:nix-community/disko -- --mode disko hosts/nebula/disko.nix
+#   nixos-install --flake .#nebula
 
 { lib, ... }:
 {

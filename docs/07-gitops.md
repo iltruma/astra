@@ -11,7 +11,7 @@ separato). Configurazione in [`modules/k3s.nix`](../modules/k3s.nix).
 
 k3s usa **Flannel** come CNI di default (bundled, nessun bootstrap esterno).
 La scelta precedente di Cilium è stata rimossa (vedi
-[stack-decisions.md#d17](stack-decisions.md#d17--cilium-rimosso--flannel-bundled-k3s)) perché il bootstrap
+[stack-decisions.md#d1](stack-decisions.md#d1--flannel-bundled-k3s)) perché il bootstrap
 era fragile su NixOS (chicken-and-egg CNI, helm-diff plugin path non-standard,
 servizio systemd custom). Su single-node homelab Flannel è più che sufficiente.
 
@@ -48,7 +48,7 @@ Tutto il cluster è gestito da **Flux** in GitOps.
 
 ```
 k8s/
-├── clusters/iss/                      ← Kustomization radice
+├── clusters/dyson/                      ← Kustomization radice
 │   ├── infrastructure.yaml            → k8s/infra/ (cert-manager, traefik)
 │   └── apps.yaml                      → k8s/apps/ (uptime-kuma, beszel, ecc.)
 │
@@ -65,7 +65,7 @@ k8s/
 
 ### Kustomization
 
-[`k8s/clusters/iss/infrastructure.yaml`](../k8s/clusters/iss/infrastructure.yaml):
+[`k8s/clusters/dyson/infrastructure.yaml`](../k8s/clusters/dyson/infrastructure.yaml):
 
 ```yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -89,7 +89,7 @@ spec:
       name: sops-age
 ```
 
-[`k8s/clusters/iss/apps.yaml`](../k8s/clusters/iss/apps.yaml): identica ma
+[`k8s/clusters/dyson/apps.yaml`](../k8s/clusters/dyson/apps.yaml): identica ma
 path `./k8s/apps` e `dependsOn: infrastructure`.
 
 ### Bootstrap (una tantum)
@@ -103,9 +103,9 @@ Se per qualche motivo Flux non parte, bootstrap manuale dalla workstation:
 
 ```bash
 # 1. Recupera kubeconfig
-ssh root@192.168.178.2 'cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config-eos
+ssh root@192.168.178.2 'cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config-nebula
 # Modifica server: https://192.168.178.2:6443
-sed -i 's/127.0.0.1/192.168.178.2/' ~/.kube/config-eos
+sed -i 's/127.0.0.1/192.168.178.2/' ~/.kube/config-nebula
 
 # 2. Installa Flux CLI (workstation)
 nix-shell -p fluxcd
@@ -115,7 +115,7 @@ flux bootstrap github \
   --owner=iltruma \
   --repository=astra \
   --branch=main \
-  --path=k8s/clusters/iss \
+  --path=k8s/clusters/dyson \
   --personal
 
 # 4. Crea il secret sops-age (se non già fatto da k3s)
@@ -243,7 +243,7 @@ k3s kubectl get pods -A
 # Cluster up
 k3s kubectl get nodes
 # NAME      STATUS   ROLES                  AGE   VERSION
-# eos   Ready    control-plane,master   Xm    v1.30.x+k3s1
+# nebula   Ready    control-plane,master   Xm    v1.30.x+k3s1
 
 # Tutti i pod Running
 k3s kubectl get pods -A

@@ -1,6 +1,6 @@
 # k8s — GitOps con Flux CD v2
 
-Questa cartella contiene tutto ciò che gira sul cluster k3s (`iss`), gestito in
+Questa cartella contiene tutto ciò che gira sul cluster k3s (`dyson`), gestito in
 **GitOps** da Flux CD v2: lo stato desiderato vive qui in Git, il
 kustomize-controller lo sincronizza nel cluster ogni 10 minuti.
 
@@ -9,13 +9,12 @@ kustomize-controller lo sincronizza nel cluster ogni 10 minuti.
 ```
 k8s/
 ├── clusters/
-│   └── iss/                    ← Kustomization radice per il cluster "iss"
+│   └── dyson/                   ← Kustomization radice per il cluster "dyson"
 │       ├── flux-system/        applicate da `flux bootstrap`, NON editare a mano
 │       ├── infra.yaml          Kustomization → k8s/infra/
 │       └── apps.yaml           Kustomization → k8s/apps/
 │
 ├── infra/                      ← Infrastruttura (HelmRelease, ClusterIssuer, …)
-│   ├── cilium/                 HelmRelease + bootstrap Cilium CNI
 │   ├── traefik/                HelmRelease Traefik 3.7.x
 │   └── cert-manager/           HelmRelease cert-manager + ClusterIssuer + secret.enc.yaml
 │
@@ -23,13 +22,13 @@ k8s/
     ├── uptime-kuma/            Status page
     ├── beszel/                 Hub + agent monitoring
     ├── homepage/               Dashboard dichiarativa
-    ├── infra-proxy/            Traefik reverse proxy → iris (router) / eos (legacy)
+    ├── infra-proxy/            Traefik reverse proxy → iris (router) / nebula (legacy)
     └── <nome>/                 Qualsiasi nuovo servizio
 ```
 
 ## Come funziona
 
-`k8s/clusters/iss/infra.yaml` e `apps.yaml` sono oggetti `Kustomization` Flux.
+`k8s/clusters/dyson/infra.yaml` e `apps.yaml` sono oggetti `Kustomization` Flux.
 Puntano rispettivamente a `k8s/infra/` e `k8s/apps/` e le riconciliano in
 sequenza (infra prima, poi apps, per garantire che CRD e cert siano pronti).
 
@@ -70,7 +69,7 @@ flux bootstrap github \
   --owner=<github-org> \
   --repository=astra \
   --branch=main \
-  --path=k8s/clusters/iss \
+  --path=k8s/clusters/dyson \
   --personal
 
 # 2. Crea il Secret con la chiave age privata (SOPS decryption)

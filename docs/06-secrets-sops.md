@@ -125,7 +125,7 @@ Montato in `/run/secrets/backup/rclone-env` (formato dotenv: `KEY=value`).
 ## Secret per k8s (`k8s/**/*.enc.yaml`)
 
 Decifrati da **Flux kustomize-controller** al sync. Configurazione in
-`k8s/clusters/iss/*.yaml`:
+`k8s/clusters/dyson/*.yaml`:
 
 ```yaml
 spec:

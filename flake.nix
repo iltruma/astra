@@ -1,16 +1,16 @@
 # Astra — flake NixOS
 #
-# Entry point per la configurazione NixOS di eos.
-# `nixosConfigurations.eos` è il sistema principale (server Dell Optiplex 3050).
+# Entry point per la configurazione NixOS di nebula.
+# `nixosConfigurations.nebula` è il sistema principale (server Dell Optiplex 3050).
 #
 # Per buildare senza applicare:
-#   nix build .#nixosConfigurations.eos.config.system.build.toplevel
+#   nix build .#nixosConfigurations.nebula.config.system.build.toplevel
 #
 # Per applicare da remoto (da workstation):
-#   nixos-rebuild switch --flake .#eos --target-host root@192.168.178.2 --build-host localhost
+#   nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2 --build-host localhost
 #
 # Per installare/reinstallare via SSH (richiede Linux già avviato sul target, es. Debian live):
-#   nix run github:nix-community/nixos-anywhere -- --flake .#eos root@192.168.178.2
+#   nix run github:nix-community/nixos-anywhere -- --flake .#nebula root@192.168.178.2
 #
 # Pinning:
 #   - nixpkgs:        nixos-25.11 (stable)
@@ -38,7 +38,7 @@
     };
 
     # nixos-anywhere: installa NixOS su qualsiasi Linux via SSH (usa kexec + disko)
-    # Uso: nix run .#nixos-anywhere -- --flake .#eos root@192.168.178.2
+    # Uso: nix run .#nixos-anywhere -- --flake .#nebula root@192.168.178.2
     nixos-anywhere = {
       url = "github:nix-community/nixos-anywhere";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -53,12 +53,12 @@
   };
 
   outputs = { self, nixpkgs, sops-nix, disko, nixos-anywhere, impermanence, nixos-hardware, ... }: {
-    nixosConfigurations.eos = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.nebula = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
 
       modules = [
         # Modulo host (aggrega hardware, networking, disko e tutti i moduli riusabili)
-        ./hosts/eos
+        ./hosts/nebula
         # Moduli esterni (input del flake)
         sops-nix.nixosModules.sops
         disko.nixosModules.disko

@@ -55,9 +55,9 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 - I secret host vivono come file `*.enc.yaml` in `secrets/`, decifrati da
   sops-nix all'attivazione, montati in `/run/secrets/`
 - Flux CD (kustomize-controller) decifra i secret SOPS automaticamente al sync;
-  le `Kustomization` in `k8s/clusters/iss/` governano l'intero albero
+  le `Kustomization` in `k8s/clusters/dyson/` governano l'intero albero
 - Il flake NixOS (`flake.nix`) è l'unica fonte di verità per OS host e servizi
-  NixOS; `nixos-rebuild switch --flake .#eos` applica tutto in modo idempotente
+  NixOS; `nixos-rebuild switch --flake .#nebula` applica tutto in modo idempotente
 
 ## Comandi rapidi
 
@@ -66,7 +66,7 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 nix flake check
 
 # Applicare modifiche NixOS (da workstation)
-nixos-rebuild switch --flake .#eos --target-host root@192.168.178.2
+nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
 
 # Stato k3s
 ssh root@192.168.178.2

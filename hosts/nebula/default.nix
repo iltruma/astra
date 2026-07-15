@@ -1,13 +1,13 @@
-# hosts/eos/default.nix
+# hosts/nebula/default.nix
 #
-# Configurazione principale dell'host eos (Dell Optiplex 3050).
+# Configurazione principale dell'host nebula (Dell Optiplex 3050).
 # Aggrega: disko, hardware, networking + moduli riusabili da ./modules.
 #
 # Per buildare:
-#   nix build .#nixosConfigurations.eos.config.system.build.toplevel
+#   nix build .#nixosConfigurations.nebula.config.system.build.toplevel
 #
 # Per applicare:
-#   nixos-rebuild switch --flake .#eos
+#   nixos-rebuild switch --flake .#nebula
 # (oppure --target-host root@192.168.178.2 per buildare in remoto)
 
 { config, lib, pkgs, ... }:

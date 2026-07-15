@@ -1,7 +1,7 @@
 # Storage
 
-Layout disco e dataset ZFS su Eos. Dichiarato in
-[`hosts/eos/disko.nix`](../hosts/eos/disko.nix) e applicato da
+Layout disco e dataset ZFS su Nebula. Dichiarato in
+[`hosts/nebula/disko.nix`](../hosts/nebula/disko.nix) e applicato da
 [Disko](https://github.com/nix-community/disko) all'install.
 
 ## Hardware
@@ -10,7 +10,7 @@ Layout disco e dataset ZFS su Eos. Dichiarato in
 |-------|------|------------|-------|
 | `/dev/sda` | SATA SSD | 500 GB | OS NixOS + dataset ZFS + tutto |
 
-> Single disk. NVMe rimosso (vedi `stack-decisions.md#d6--rimozione-nvme-single-disk`).
+> Single disk. NVMe rimosso (vedi `stack-decisions.md#d3--rimozione-nvme-single-disk`).
 > Il backup off-site è su Cloudflare R2 (vedi [03-backup.md](03-backup.md)),
 > non su disco locale.
 
@@ -24,7 +24,7 @@ ZFS è stato scelto per:
 - **Auto-scrub** settimanale per integrity check
 
 > **Nota**: la cifratura ZFS (`tank/root` con AES-256-GCM + TPM2) è stata
-> **rimossa** (vedi `stack-decisions.md#d18--zfs-encryption-rimossa`). Su
+> **rimossa** (vedi `stack-decisions.md#d13--zfs-encryption-rimossa`). Su
 > homelab domestico il threat model furto fisico non è reale; la complessità
 > (TPM2, prompt al boot, modulo `zfs-tpm2.nix`) superava i benefici. ZFS resta
 > per snapshot, CoW, compressione. Dataset cifrati specifici (es.
@@ -98,7 +98,7 @@ major), considera un backup completo rclone prima.
 
 ## ZFS tuning
 
-In [`hosts/eos/hardware.nix`](../hosts/eos/hardware.nix):
+In [`hosts/nebula/hardware.nix`](../hosts/nebula/hardware.nix):
 
 ```nix
 services.zfs.autoScrub.enable = true;  # scrub settimanale
@@ -108,7 +108,7 @@ services.zfs.trim.enable = true;       # TRIM per SSD
 ## Persistenza (vs impermanence)
 
 NixOS offre il pattern "impermanence" (`/` resettato a ogni boot, stato in
-`/persist`). Eos ha scelto di **non** usarlo: complica il rollback e il
+`/persist`). Nebula ha scelto di **non** usarlo: complica il rollback e il
 supporto di k3s state, e i benefici su single-host sono marginali. Lo state
 vive normalmente sui dataset e viene backuppato con rclone.
 

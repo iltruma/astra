@@ -16,12 +16,12 @@ si passa al successivo. Le dipendenze determinano l'ordine.
 | Host       | Ruolo                      | Tipo | IP            |
 |------------|----------------------------|------|---------------|
 | `iris`     | Router Fritz!Box (gateway) | hw   | 192.168.178.1 |
-| `eos`  | NixOS baremetal + k3s      | host | 192.168.178.2 |
-| `iss`      | Cluster k3s (single-node)  | servizio sullo stesso host | 192.168.178.2:6443 (k3s API) |
+| `nebula`  | NixOS baremetal + k3s      | host | 192.168.178.2 |
+| `dyson`      | Cluster k3s (single-node)  | servizio sullo stesso host | 192.168.178.2:6443 (k3s API) |
 | `sentinel` | Technitium DNS             | servizio NixOS | 192.168.178.2:53 |
 
-> **Cambiamento post-migrazione**: `iss` e `sentinel` non sono più VM/LXC
-> separati, ma servizi NixOS sullo stesso host `eos`. L'IP `.2` espone
+> **Cambiamento post-migrazione**: `dyson` e `sentinel` non sono più VM/LXC
+> separati, ma servizi NixOS sullo stesso host `nebula`. L'IP `.2` espone
 > tutte le porte (k3s API, DNS, HTTP/HTTPS). `k8s/` resta invariato
 > (manifesti k8s parlano di `*.lab.paroparo.it → 192.168.178.2` →
 > Traefik su hostNetwork).
@@ -32,7 +32,7 @@ si passa al successivo. Le dipendenze determinano l'ordine.
 
 | Sprint | Servizio | Stato | Note |
 |--------|----------|-------|------|
-| N0     | Flake skeleton + host config | 🟢 | `flake.nix`, `hosts/eos/`, `modules/common.nix` |
+| N0     | Flake skeleton + host config | 🟢 | `flake.nix`, `hosts/nebula/`, `modules/common.nix` |
 | N1     | Servizi host (Technitium, k3s, backup) | 🟢 | `modules/{technitium,k3s,backup}.nix` |
 | N2     | ~~Cilium HelmRelease Flux~~ | ❌ rimosso | `k8s/infra/cilium/` rimosso; CNI è Flannel (vedi D1) |
 | N3     | Docs + CI | 🟢 | Doc 00-08 + CI con `nix flake check` |
@@ -41,10 +41,10 @@ si passa al successivo. Le dipendenze determinano l'ordine.
 | N6     | Validazione end-to-end | 🔴 | kubectl get nodes, flux get all, dig lab.paroparo.it |
 
 **DoD Fase 0**:
-- Eos fa boot da NixOS senza USB
+- Nebula fa boot da NixOS senza USB
 - `nixos-rebuild switch` funziona da workstation remota
 - k3s è up, Flannel è attivo, tutti i pod kube-system Running
-- Flux sincronizza `k8s/clusters/iss/` e tutte le Kustomization sono Ready
+- Flux sincronizza `k8s/clusters/dyson/` e tutte le Kustomization sono Ready
 - Technitium risolve `lab.paroparo.it` per la LAN
 - `terraform/`, `ansible/`, `packer/` rimossi (✅ fatto)
 - CI verde con `nix flake check`
@@ -63,7 +63,7 @@ L'ossatura del homelab. Va completata in ordine perché ogni pezzo sblocca i suc
 | S3     | cert-manager   | k3s            | 🟢    | S1, S2     |
 | S4     | Flux CD v2     | k3s            | 🟢    | S2         |
 | S5     | SOPS + age     | k3s            | 🟢    | S4         |
-| S6     | Backup / DR    | eos + k3s  | 🟢    | S2         |
+| S6     | Backup / DR    | nebula + k3s  | 🟢    | S2         |
 
 **S0 — Technitium DNS** · doc: [04-dns-technitium.md](04-dns-technitium.md)
 - DNS ricorsivo + blocklist per tutta la rete, split-horizon per `lab.paroparo.it`.
@@ -80,8 +80,8 @@ L'ossatura del homelab. Va completata in ordine perché ogni pezzo sblocca i suc
 
 **S2 — k3s: completare il bootstrap** · doc: [07-gitops.md](07-gitops.md)
 - NixOS `services.k3s` con Flannel come CNI di default (bundled). Nessun
-  bootstrap esterno necessario (vedi [stack-decisions.md](stack-decisions.md#d17--cilium-rimosso--flannel-bundled-k3s)).
-- DoD: `k3s kubectl get nodes` mostra `eos` Ready dalla workstation;
+  bootstrap esterno necessario (vedi [stack-decisions.md](stack-decisions.md#d1--flannel-bundled-k3s)).
+- DoD: `k3s kubectl get nodes` mostra `nebula` Ready dalla workstation;
   `k3s kubectl get pods -n kube-system` mostra tutti i pod Running;
   un pod di test riesce a fare DNS lookup verso l'esterno.
 
@@ -93,7 +93,7 @@ L'ossatura del homelab. Va completata in ordine perché ogni pezzo sblocca i suc
 
 **S4 — Flux CD v2: GitOps**
 - Flux CD (CNCF Graduated) installato via `flux bootstrap github`. La struttura
-  `k8s/clusters/iss/` contiene le `Kustomization` radice; `k8s/infra/` ospita
+  `k8s/clusters/dyson/` contiene le `Kustomization` radice; `k8s/infra/` ospita
   le HelmRelease di infrastruttura (Traefik, cert-manager); `k8s/apps/` ospita
   i servizi applicativi. Il kustomize-controller riconcilia ogni 10 minuti.
 - DoD: `flux get kustomizations` mostra tutte le kustomization `Ready`; un
@@ -112,7 +112,7 @@ L'ossatura del homelab. Va completata in ordine perché ogni pezzo sblocca i suc
   (nixos-install + Flux sync). I dati applicativi vengono sincronizzati
   su **Cloudflare R2** via `rclone` con systemd timer notturno
   (`modules/backup.nix`). Retention 7 giorni.
-- DoD: `rclone ls r2:eos-backup/` mostra file; `journalctl -u rclone-backup`
+- DoD: `rclone ls r2:nebula-backup/` mostra file; `journalctl -u rclone-backup`
   pulito; la strategia di restore da zero è documentata in [03-backup.md](03-backup.md).
 
 
@@ -127,7 +127,7 @@ L'ossatura del homelab. Va completata in ordine perché ogni pezzo sblocca i suc
 | S12    | ~~Cloudflare Tunnel~~  | ❌ rimosso | Per accesso esterno valutare in futuro Tailscale (mesh VPN, zero infrastruttura). |
 
 > Prometheus+Grafana+Loki rimossi dalla roadmap: troppo complessi per il caso d'uso.
-> Per metriche host: Beszel (D11). Per log: `journalctl` via SSH è sufficiente su single-node.
+> Per metriche host: Beszel (D7). Per log: `journalctl` via SSH è sufficiente su single-node.
 
 ---
 
@@ -152,7 +152,7 @@ Obiettivo: usare tutto il backbone (GitOps + TLS + ingress) per pubblicare codic
 
 ⚠️ **Storage**: i workload media usano un dataset ZFS dedicato (`tank/media`) montato
 come `hostPath` su k3s. Niente Longhorn. Per una collezione estesa servirà un HDD
-esterno collegato a eos (vedi [02-storage.md](02-storage.md)).
+esterno collegato a nebula (vedi [02-storage.md](02-storage.md)).
 
 ⚠️ **VPN torrent**: il traffico di qBittorrent va instradato su una VPN egress
 (es. Mullvad). È cosa diversa dal Cloudflare Tunnel (che è solo accesso inbound).
@@ -174,9 +174,9 @@ esterno collegato a eos (vedi [02-storage.md](02-storage.md)).
 
 | VLAN | Subnet | Ospita |
 |---|---|---|
-| VLAN 1 (native) | 192.168.178.x | Management: workstation, host eos |
+| VLAN 1 (native) | 192.168.178.x | Management: workstation, host nebula |
 | VLAN 10 | 10.10.0.x | Core infra: sentinel (Technitium DNS) |
-| VLAN 20 | 10.20.0.x | Cluster: iss (k3s) |
+| VLAN 20 | 10.20.0.x | Cluster: dyson (k3s) |
 | VLAN 30 | 10.30.0.x | Downloads: qBittorrent + VPN egress (traffico untrusted) |
 | VLAN 40 | 10.40.0.x | DMZ: Cloudflare Tunnel exit point (servizi pubblici) |
 
@@ -190,7 +190,7 @@ esterno collegato a eos (vedi [02-storage.md](02-storage.md)).
 - Gli IP cambiano: le VM vanno riconfigurate e i record DNS `lab.paroparo.it`
   aggiornati nel playbook Technitium.
 
-**DoD S18**: `iss`, `sentinel` su VLAN distinte; ping cross-VLAN
+**DoD S18**: `dyson`, `sentinel` su VLAN distinte; ping cross-VLAN
 bloccato dove atteso; DNS `lab.paroparo.it` risolve correttamente dai nuovi IP.
 
 ---
@@ -199,7 +199,7 @@ bloccato dove atteso; DNS `lab.paroparo.it` risolve correttamente dai nuovi IP.
 
 | Sprint | Servizio | Note |
 |---|---|---|
-| S19 | Suricata IDS | Container passivo su `eos`, mirror del traffico East-West via `tc mirred` |
+| S19 | Suricata IDS | Container passivo su `nebula`, mirror del traffico East-West via `tc mirred` |
 
 **S19 — Suricata IDS (container passivo)**
 
@@ -208,22 +208,22 @@ bloccato dove atteso; DNS `lab.paroparo.it` risolve correttamente dai nuovi IP.
   dentro la LAN e su quali domini/CDN vanno i device. Un cryptominer su un
   container k3s, una IoT compromessa che chiama server russi, un port scan
   interno passano inosservati.
-- **Approccio**: Suricata 7 in un **container** su `eos` (nixos-container
+- **Approccio**: Suricata 7 in un **container** su `nebula` (nixos-container
   o podman), **non inline** (IDS only, no IPS). Il traffico di `br0` viene
   clonato con `tc mirred` su una `dummy0` passata al container; Suricata legge
   in modalità promiscua, alert su `eve.json` (newline-delimited JSON).
   Fail-safe: se il container muore, la rete continua a funzionare.
 - **Risorse stimate**: 2 GB RAM allocati, 1-2 core CPU, ~300 MB a riposo,
-  ~800 MB con ET Open caricato. 16 GB di Eos bastano con margine.
+  ~800 MB con ET Open caricato. 16 GB di Nebula bastano con margine.
 - **Cosa NON fa** (consapevolmente): non blocca pacchetti (IDS, non IPS), non
-  vede il traffico tra device fisici che non passa per eos (manca una porta
+  vede il traffico tra device fisici che non passa per nebula (manca una porta
   SPAN sullo switch). Per copertura totale serve OPNsense su mini-PC dedicato
   tra Fritz!Box e switch.
 - **Tuning iniziale**: 200-500 falsi positivi attesi nelle prime 24h, da filtrare
   con `disable.conf` (regole ET Open troppo aggressive per homelab). Target
   operativo: 5-20 alert/giorno, 1-3 worth investigating.
 - **DoD**:
-  - Container Suricata su `eos` (tipo: nixos-container o podman),
+  - Container Suricata su `nebula` (tipo: nixos-container o podman),
     `eth0` su `br0`, `suricata0` come mirror di `br0` via `tc mirred`.
   - `systemctl status suricata` active; `suricata-update` con ET Open enabled.
   - `eve.json` viene popolato in `/var/log/suricata/`; un alert reale (es.
@@ -244,10 +244,10 @@ bloccato dove atteso; DNS `lab.paroparo.it` risolve correttamente dai nuovi IP.
 
 ```
 flake.nix         Entry point NixOS (pin nixpkgs, sops-nix, disko)
-hosts/eos/    Config host: disko (ZFS), hardware, networking, default
+hosts/nebula/    Config host: disko (ZFS), hardware, networking, default
 modules/          Moduli NixOS: common, technitium, k3s, backup
 secrets/          *.enc.yaml cifrati con SOPS + age (sops-nix)
-k8s/              Manifesti GitOps (Flux): clusters/iss/, infra/, apps/
+k8s/              Manifesti GitOps (Flux): clusters/dyson/, infra/, apps/
 docs/             Guide operative: install, network, storage, dns, tls, secrets, gitops
 .github/workflows/  CI: nix flake check, kubeconform, gitleaks
 .sops.yaml        Regole cifratura SOPS

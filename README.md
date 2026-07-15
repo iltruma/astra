@@ -52,12 +52,12 @@ L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
 ```
                    rete 192.168.178.0/24
   iris     .1  ─  Router Fritz!Box         (gateway)
-  eos  .2  ─  NixOS baremetal
+  nebula  .2  ─  NixOS baremetal
                   ├─ Technitium DNS         (servizio NixOS, porta 53)
                   ├─ k3s                    (servizio NixOS, porta 6443)
                    │   ├─ Traefik            (ingress 80/443, hostNetwork)
                    │   ├─ cert-manager       (TLS ← Let's Encrypt via DNS-01 Cloudflare)
-                   │   ├─ Flux CD v2         (GitOps → k8s/clusters/iss/)
+                   │   ├─ Flux CD v2         (GitOps → k8s/clusters/dyson/)
                    │   └─ app (Fasi 2-4)
                   └─ systemd timer rclone   (backup → R2)
 ```
@@ -78,7 +78,7 @@ Per il setup completo dei servizi k3s vedi
 - Workstation Linux/Mac/WSL con: `nix` (flakes abilitati), `git`, `ssh` (chiave ed25519)
 
 Per il partizionamento ZFS, dataset, layout storage e motivazioni vedi
-[`hosts/eos/disko.nix`](hosts/eos/disko.nix) e
+[`hosts/nebula/disko.nix`](hosts/nebula/disko.nix) e
 [`docs/02-storage.md`](docs/02-storage.md).
 
 ---
@@ -90,7 +90,9 @@ astra/
 ├── flake.nix                    Entry point NixOS (pin nixpkgs, sops-nix, disko)
 ├── flake.lock                   ← tracciato (pin inputs)
 ├── hosts/
-│   └── eos/                 Config specifica del server Dell Optiplex 3050
+│   ├── nebula/             Config specifica del server Dell Optiplex 3050
+│   ├── taiga/               Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
+│   └── installer/           ISO NixOS headless per nixos-anywhere
 │       ├── default.nix          hostName, locale, nix settings, aggrega tutto
 │       ├── hardware.nix         ZFS, kernel modules, bootloader, hostId
 │       ├── networking.nix       bridge br0, firewall, IP statico
@@ -107,7 +109,7 @@ astra/
 │   ├── flux-sops-age.enc.yaml   chiave age per decifrare k8s/*.enc.yaml
 │   └── rclone-env.enc.yaml      credenziali R2 per backup
 ├── k8s/                         Manifesti Kubernetes (GitOps, invariato)
-│   ├── clusters/iss/            Kustomization radice (infrastructure + apps)
+│   ├── clusters/dyson/         Kustomization radice (infrastructure + apps)
 │   ├── infra/                   HelmRelease cert-manager, traefik
 │   └── apps/                    una cartella per servizio (beszel, homepage,
 │                                infra-proxy, uptime-kuma)
@@ -131,7 +133,6 @@ astra/
 ├── .renovaterc.json             aggiornamenti automatici dipendenze
 ├── .gitignore                   nix, secrets, k8s
 ├── AGENTS.md                    regole agenti (opencode, Claude Code)
-├── CLAUDE.md → AGENTS.md       symlink per Claude Code
 └── opencode.json               config opencode
 ```
 
@@ -164,18 +165,18 @@ sops --encrypt --in-place secrets/rclone-env.enc.yaml
 
 # 2. Genera hostId univoco per ZFS
 head -c4 /dev/urandom | od -A none -t x4
-# Aggiorna il valore in hosts/eos/hardware.nix → networking.hostId
+# Aggiorna il valore in hosts/nebula/hardware.nix → networking.hostId
 
 # 3. Valida il flake
 nix flake check
 
 # 4. Installa NixOS (da USB minimal, vedi docs/00-nixos-installation.md)
-nix run github:nix-community/disko -- --mode disko hosts/eos/disko.nix
-nixos-install --flake .#eos
+nix run github:nix-community/disko -- --mode disko hosts/nebula/disko.nix
+nixos-install --flake .#nebula
 reboot
 
 # 5. Applica update da remoto (da workstation)
-nixos-rebuild switch --flake .#eos --target-host root@192.168.178.2
+nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
 
 # 6. Kubernetes
 ssh root@192.168.178.2
@@ -259,7 +260,7 @@ Bump intenzionale, test in staging, commit atomico. Vedi anche
 
 ## Troubleshooting
 
-- **k3s non raggiungibile**: `ssh root@eos 'k3s kubectl get nodes'`
+- **k3s non raggiungibile**: `ssh root@nebula 'k3s kubectl get nodes'`
 - **Cert non emesso**: `k3s kubectl describe certificate -A` e
   `k3s kubectl describe challenge -A` (DNS-01 deve creare TXT su Cloudflare)
 - **Flux non sincronizza**: `k3s flux get kustomizations` e

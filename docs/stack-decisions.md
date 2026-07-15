@@ -231,7 +231,7 @@ Serve sapere CPU/RAM host, disco, container up/down.
 ### Limitazione: K8s metrics
 
 Beszel non ha supporto K8s nativo. Per metriche per Pod/Deployment come
-oggetti K8s serve altro (VictoriaMetrics o simile). Per Eos è accettabile:
+oggetti K8s serve altro (VictoriaMetrics o simile). Per Nebula è accettabile:
 l'interesse è il nodo, non l'introspection dei workload.
 
 ### Stato
@@ -270,7 +270,7 @@ Prerequisito per workload Fase 4 (Jellyfin transcoding) e per buffer generale.
 ### Problema
 
 Pi-hole è un ad-blocker DNS, non un server DNS completo. Per il pattern
-Eos (`*.lab.paroparo.it` interno → 192.168.178.2, split horizon) servono:
+Nebula (`*.lab.paroparo.it` interno → 192.168.178.2, split horizon) servono:
 - Zona primaria autoritativa per `lab.paroparo.it`
 - Record wildcard gestibile
 - Split horizon (risposta diversa per query interne vs esterne)
@@ -314,9 +314,9 @@ possono ricostruire da Git:
 ```nix
 systemd.services.rclone-backup = {
   serviceConfig.ExecStart = ''
-    rclone sync /var/lib/technitium-dns-server r2:eos-backup/technitium/
-    rclone sync /var/lib/rancher/k3s r2:eos-backup/k3s/
-    rclone sync /home r2:eos-backup/home/
+    rclone sync /var/lib/technitium-dns-server r2:nebula-backup/technitium/
+    rclone sync /var/lib/rancher/k3s r2:nebula-backup/k3s/
+    rclone sync /home r2:nebula-backup/home/
   '';
 };
 systemd.timers.rclone-backup = {
@@ -433,7 +433,7 @@ incluso automaticamente.
 
 Da eseguire almeno una volta dopo la migrazione NixOS:
 1. `nix flake check` verde
-2. `nixos-install --flake .#eos` su disco pulito
+2. `nixos-install --flake .#nebula` su disco pulito
 3. Verifica che k3s, Flannel, Flux ripartano
 4. Verifica che Technitium risolva `lab.paroparo.it`
 5. Verifica che il backup rclone sia leggibile da R2
