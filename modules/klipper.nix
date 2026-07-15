@@ -31,9 +31,9 @@
 
     settings = lib.mkIf (!(builtins.pathExists ../hosts/taiga/printer.cfg)) {
       printer = {
-        kinematics = "none";
-        max_velocity = 300;
-        max_accel = 3000;
+        kinematics = "setta il giusto printer.cfg";
+        max_velocity = 0;
+        max_accel = 0;
       };
     };
   };
@@ -45,15 +45,16 @@
 
     settings = {
       authorization = {
-        trusted_clients = [ "192.168.178.0/24" ];
+        trusted_clients = [ 
+           "127.0.0.0/8"
+           "192.168.178.0/24" 
+        ];
         cors_domains = [
           "https://taiga.lab.paroparo.it"
           "http://192.168.178.43"
         ];
       };
-      update_manager.enable_system_updates = false;
     };
-
     allowSystemControl = true;
   };
 
@@ -65,7 +66,13 @@
     # nginx extra config: redirect HTTP → HTTPS
     nginx = {
       forceSSL = true;
-      enableACME = true;
+      sslCertificate =  "${config.security.acme.certs."taiga.lab.paroparo.it".directory}/chain.pem";
+      sslCertificateKey =  "${config.security.acme.certs."taiga.lab.paroparo.it".directory}/key.pem";
+      # enableACME rimosso: il cert è già emesso da security.acme (DNS-01) sotto.
+      # enableACME aggiungerebbe webroot a security.acme.certs.<name>, che
+      # confligge con dnsProvider (esattamente uno dei due è richiesto).
+      # NixOS collega automaticamente il cert ACME al virtual host se il nome
+      # corrisponde a hostName.
     };
   };
 

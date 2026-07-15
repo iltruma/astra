@@ -75,7 +75,6 @@
         ./hosts/taiga
         nixos-hardware.nixosModules.raspberry-pi-4
         sops-nix.nixosModules.sops
-        impermanence.nixosModules.impermanence
       ];
     };
 

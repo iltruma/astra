@@ -117,4 +117,17 @@
       };
     };
   };
+  # ── filesystem: neededForBoot richiesto da impermanence (commit 7b1d382f) ───
+# impermanence verifica che ogni mount point usato per persistenza (/persist)
+# e storage effimero (/var) abbia neededForBoot = true.
+# /persist: dataset ZFS tank/persist, non ha fileSystem NixOS preesistente
+#   (ZFS lo monta autonomamente) → va dichiarato esplicitamente.
+# /var: fileSystem già esistente, basta aggiungere il flag.
+fileSystems."/persist" = {
+  device = "tank/persist";
+  fsType = "zfs";
+  neededForBoot = true;
+};
+fileSystems."/var".neededForBoot = true;
+
 }

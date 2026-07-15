@@ -27,7 +27,6 @@
     ./networking.nix
     # moduli riusabili: common.nix (SSH, sops, utenti), impermanence, backup
     ../../modules/common.nix
-    ../../modules/impermanence.nix
     # stack stampante
     ../../modules/klipper.nix
   ];
