@@ -1,18 +1,27 @@
-# Terraform
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.backup
-terraform/.terraform.lock.hcl
-terraform/terraform.tfvars
-
-# Ansible
-ansible/*.retry
-
-# Kubernetes
-kubeconfig
-*.kubeconfig
+# Nix
+# Risultato di `nix build` e `nix develop`
+result
+result-*
+.direnv/
+# Nix store locale (non dovrebbe essere in repo, ma per sicurezza)
+nix/store
 
 # Secrets
 *.pem
 *.key
 .env
+certs/
+# Age private key (mai committare)
+age-key.txt
+keys.txt
+# SOPS placeholder (verrà sostituito con la vera chiave al primo encrypt)
+AGE_PUBLIC_KEY
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Editor / OS
+*.swp
+*.swo
+.DS_Store

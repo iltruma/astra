@@ -1,0 +1,42 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: traefik
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: https://helm.traefik.io/traefik
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: traefik
+      # ponytail: chart version (41.x), NON app version (3.7.x) — traefik slega le due
+      version: "41.x"
+      sourceRef:
+        kind: HelmRepository
+        name: traefik
+        namespace: flux-system
+      interval: 24h
+  values:
+    # Disabilita il Traefik default di k3s (già rimpiazzato da questo)
+    deployment:
+      replicas: 1
+    ports:
+      web:
+        redirectTo:
+          port: websecure
+    providers:
+      kubernetesCRD:
+        enabled: true
+      kubernetesIngress:
+        enabled: true
+    ingressRoute:
+      dashboard:
+        enabled: false   # dashboard esposta manualmente se serve

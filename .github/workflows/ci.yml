@@ -1,0 +1,68 @@
+# CI — lint, validate e secret scanning su ogni push/PR.
+#
+# Nessun job tocca l'infrastruttura reale: sono tutti controlli statici.
+# - nix flake check:    validazione del flake NixOS
+# - kubeconform:        schema-validation dei manifest k8s (CRD via catalogo datree + Flux)
+# - gitleaks:           secret scanning sull'intera history (config in .gitleaks.toml)
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  nix-flake-check:
+    name: nix flake check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: flake check
+        run: nix flake check --all-systems
+      - name: nixosConfigurations eval
+        run: nix eval .#nixosConfigurations.houston.config.system.build.toplevel.drvPath --raw
+
+  kubeconform:
+    name: kubeconform (k8s manifests)
+    runs-on: ubuntu-latest
+    env:
+      KUBECONFORM_VERSION: v0.8.0
+    steps:
+      - uses: actions/checkout@v6
+      # -skip CustomResourceDefinition: il meta-schema delle CRD non è nei
+      #   cataloghi pubblici; le CR (Certificate, ClusterIssuer, HelmRelease …)
+      #   sono validate tramite il catalogo datree (include i CRD Flux:
+      #   kustomization_v1, helmrelease_v2, helmrepository_v1, gitrepository_v1).
+      # -ignore values.yaml: è input Helm, non un manifest Kubernetes.
+      # -ignore *.enc.yaml: file SOPS cifrati, non manifest K8s validi.
+      - name: Validate manifests
+        run: |
+          curl -sSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" | tar xz kubeconform
+          ./kubeconform -strict -summary \
+            -skip CustomResourceDefinition \
+            -ignore-missing-schemas \
+            -ignore-filename-pattern '.*values\.yaml' \
+            -ignore-filename-pattern '.*README\.md' \
+            -ignore-filename-pattern '.*\.enc\.yaml' \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            k8s/
+
+  gitleaks:
+    name: gitleaks (secret scanning)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # history completa: scansiona ogni commit, non solo il tip
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

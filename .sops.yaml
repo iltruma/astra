@@ -1,0 +1,28 @@
+# Configurazione SOPS per il repo houston.
+#
+# Cifra i file con estensione .enc.yaml (secret k8s e host) usando la stessa
+# chiave age condivisa tra Flux (k8s/) e sops-nix (secrets/).
+#
+# Per generare la chiave age (una volta):
+#   age-keygen -o age-key.txt
+#   # age-key.txt contiene la chiave privata (NON committare)
+#   # La chiave pubblica è nella prima riga: # public key: age1xxxx...
+#
+# Sostituisci AGE_PUBLIC_KEY con la tua chiave pubblica prima del primo encrypt.
+#
+# encrypted_regex: cifra solo i valori (data, stringData) e i campi top-level
+# (env vars per rclone). Le chiavi YAML restano in chiaro per diff leggibili.
+
+creation_rules:
+  # Secret Kubernetes (k8s/apps/*, k8s/infra/*)
+  - path_regex: k8s/.*\.enc\.yaml$
+    age: "age1xha4vvyd2593c9cx2qnnzsfw7l5enj2yncvk3d9j62gsp0ql6y0qzmt6g5"
+    encrypted_regex: '^(data|stringData)$'
+
+  # Secret host NixOS (secrets/)
+  - path_regex: secrets/.*\.enc\.yaml$
+    age: "age1xha4vvyd2593c9cx2qnnzsfw7l5enj2yncvk3d9j62gsp0ql6y0qzmt6g5"
+    # Per secrets/ rclone-env.enc.yaml il formato è dotenv (KEY=value)
+    # Per secrets.yaml (sops-nix default) il formato è YAML generico
+    # Match: k3s.*, backup.*, env vars uppercase, k8s Secret data/stringData
+    encrypted_regex: '^(stringData|data|k3s|backup|[A-Z_]+)$'

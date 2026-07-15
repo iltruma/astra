@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: beszel
+  labels:
+    # L'agent usa privileged + hostPID + hostNetwork + hostPath (workaround K8s).
+    # Etichetta esplicita: documenta l'intento e immunizza da cambi di default.
+    pod-security.kubernetes.io/enforce: privileged

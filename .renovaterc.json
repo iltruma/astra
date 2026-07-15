@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "schedule": ["before 9am on Monday"],
+  "timezone": "Europe/Rome",
+  "kubernetes": {
+    "fileMatch": ["k8s/.+\\.yaml$"]
+  },
+  "helm-values": {
+    "fileMatch": ["k8s/.+values\\.yaml$"]
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["helmv3", "helm-values"],
+      "groupName": "helm charts",
+      "automerge": false
+    },
+    {
+      "matchDepTypes": ["action"],
+      "groupName": "github actions",
+      "automerge": true
+    }
+  ]
+}

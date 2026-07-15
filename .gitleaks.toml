@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+# I file *.enc.yaml sono cifrati con SOPS + age: i valori sono ciphertext,
+# non secret in chiaro. Gitleaks li esclude per evitare falsi positivi.
+[allowlist]
+paths = ['''.*\.enc\.yaml$''']

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: homepage
+data:
+  settings.yaml: |
+    title: Houston Homelab
+    headerStyle: clean
+    theme: dark
+    color: slate
+    layout:
+      Infrastructure:
+        style: row
+        columns: 4
+
+  services.yaml: |
+    - Infrastructure:
+        - Technitium:
+            href: https://192.168.178.2:5380
+            description: DNS server (houston)
+            icon: technitium.png
+        - Flux:
+            href: https://github.com/iltruma/houston
+            description: GitOps repo
+            icon: flux-cd.png
+        - Beszel:
+            href: https://beszel.lab.paroparo.it
+            description: Monitoring
+            icon: beszel.png
+
+  widgets.yaml: |
+    - resources:
+        cpu: true
+        memory: true
+    - search:
+        provider: duckduckgo
+        target: _blank
+
+  bookmarks.yaml: |
+    - Repos:
+        - Houston:
+            - abbr: HO
+              href: https://github.com/iltruma/houston
