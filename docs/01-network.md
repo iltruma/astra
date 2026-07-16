@@ -152,19 +152,67 @@ ip addr show br0                          # IP 192.168.178.2
 ss -tlnp | grep -E ':(22|53|80|443|6443)' # porte in ascolto
 ```
 
-## Piano B: VLAN (futuro)
+## Piano B: VLAN con MikroTik hEX S (Fase 5)
 
-Per isolamento VLAN servirebbe uno switch managed (es. TP-Link TL-SG108E).
-Schema target:
+Prerequisito hardware: **MikroTik hEX S 2025** (~69€) come router/gateway
+principale. Fritz!Box 3490 in modalità PPPoE passthrough (bridge VDSL puro).
 
-| VLAN | Subnet | Ospita |
-|------|--------|--------|
-| 1 (native) | 192.168.178.x | Management (workstation) |
-| 10 | 10.10.0.x | Core infra (Technitium DNS, host nebula) |
-| 20 | 10.20.0.x | Cluster k3s |
-| 30 | 10.30.0.x | Downloads (qBittorrent + VPN egress) |
-| 40 | 10.40.0.x | DMZ (Cloudflare Tunnel exit) |
+### Topologia
 
-Per ora **rinviato**: serve hardware + reconfigurazione Fritz!Box. La rete
-attuale è una rete singola, isolata a livello firewall (NixOS dropa il
-traffico non esplicito).
+```
+Internet
+    │
+Fritz!Box 3490 (bridge VDSL — solo modem, gestisce tag VLAN 100 Aruba)
+    │ Ethernet
+    ▼
+hEX S (PPPoE, routing inter-VLAN, DHCP, firewall, WireGuard ingress)
+    ├── Ether1: WAN — PPPoE Aruba (user: aruba, pass: aruba)
+    ├── Ether2: trunk 802.1Q → nebula (enp1s0)
+    ├── Ether3: access VLAN 10 → workstation admin
+    ├── Ether4: access VLAN 20 → altri device di casa
+    └── Ether5: access VLAN 30 / AP WiFi multi-SSID
+```
+
+### Schema VLAN
+
+| VLAN | Subnet | Gateway | Ospita | Accesso |
+|------|--------|---------|--------|---------|
+| 10 — Trusted | `10.10.0.0/24` | `10.10.0.1` | nebula (`10.10.0.2`), workstation admin | tutto |
+| 20 — Home | `10.20.0.0/24` | `10.20.0.1` | PC/telefoni altri utenti di casa | Internet + nebula :80/443; no SSH, no k3s API |
+| 30 — IoT/Guest | `10.30.0.0/24` | `10.30.0.1` | smart TV, IoT, ospiti WiFi | solo Internet |
+| 40 — Downloads | `10.40.0.0/24` | `10.40.0.1` | qBittorrent + VPN egress | solo Internet via VPN (aggiunta in Fase 4) |
+
+### Regole firewall inter-VLAN
+
+```
+VLAN 10 → qualsiasi          ALLOW   # admin
+VLAN 20 → Internet           ALLOW
+VLAN 20 → nebula :80/:443    ALLOW   # servizi web
+VLAN 20 → nebula :22/:6443   DENY    # SSH e k3s solo VLAN 10
+VLAN 20 → RFC1918            DENY
+VLAN 30 → Internet           ALLOW
+VLAN 30 → RFC1918            DENY
+VLAN 40 → Internet via VPN   ALLOW
+VLAN 40 → RFC1918            DENY
+```
+
+### Cosa cambia su nebula
+
+- `enp1s0` diventa trunk 802.1Q (niente più IP diretto sull'interfaccia fisica)
+- Subinterface `enp1s0.10` con IP statico `10.10.0.2/24`
+- Gateway: `10.10.0.1` (hEX S VLAN 10)
+- `networking.nix` aggiornato di conseguenza
+- Record DNS `lab.paroparo.it` aggiornati a `10.10.0.2`
+
+### Fritz!Box: abilitare PPPoE passthrough
+
+1. `Internet → Dati di accesso` → abilita **Vista avanzata**
+2. Account information → `No`
+3. `Cambiare impostazioni connessione` → VLAN ID: `100`, Encapsulation: **Bridged**
+4. Spunta **"I dispositivi collegati possono stabilire connessioni Internet proprie"**
+5. Rimuovi spunta da "Verifica connessione dopo Applica" → Applica
+
+### WireGuard ingress
+
+Gira direttamente su hEX S (RouterOS v7 nativo). I peer remoti entrano in
+VLAN 10 come se fossero fisicamente in LAN. Zero modifiche a nebula.

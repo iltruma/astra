@@ -161,37 +161,71 @@ esterno collegato a nebula (vedi [02-storage.md](02-storage.md)).
 
 ## Fase 5 — Rete avanzata (Piano B VLAN)
 
-> **Prerequisito hardware**: switch managed (es. TP-Link TL-SG108E ~30€,
-> Netgear GS308E ~40€, o MikroTik). Senza switch managed il firewall NixOS
-> (Piano A, già documentato in [01-network.md](01-network.md))
-> è il livello di isolamento disponibile.
+> **Prerequisito hardware**: MikroTik hEX S 2025 (~69€) come router/gateway
+> principale. Fritz!Box 3490 in PPPoE passthrough (bridge VDSL puro).
+> Senza questo hardware il firewall NixOS (Piano A, già documentato in
+> [01-network.md](01-network.md)) è il livello di isolamento disponibile.
 
 | Sprint | Servizio | Note |
 |---|---|---|
-| S18 | VLAN segmentation | Bridge `br0` VLAN-aware; riassegnazione IP per VLAN; firewall inter-VLAN su NixOS |
+| S17b | Hardware: hEX S + Fritz bridge | Acquisto hEX S; Fritz!Box 3490 in PPPoE passthrough; PPPoE su hEX S Ether1 |
+| S18  | VLAN segmentation | VLAN 10/20/30 su hEX S; trunk verso nebula; subinterface NixOS; firewall inter-VLAN |
+| S18b | VLAN 40 downloads | Aggiunta VLAN 40 quando si installa qBittorrent (Fase 4) |
+
+**Schema rete con hEX S:**
+
+```
+Internet
+    │
+Fritz!Box 3490 (bridge VDSL puro — solo modem)
+    │ Ethernet
+    ▼
+hEX S (router, gateway, DHCP, firewall inter-VLAN, WireGuard ingress)
+    ├── Ether1: WAN — PPPoE verso Aruba (VLAN 100 gestita dal Fritz)
+    ├── Ether2: trunk 802.1Q → nebula (enp1s0, tutte le VLAN tagged)
+    ├── Ether3: access VLAN 10 → workstation admin
+    ├── Ether4: access VLAN 20 → altri device di casa
+    └── Ether5: access VLAN 30 / AP WiFi multi-SSID
+```
 
 **Schema VLAN target:**
 
-| VLAN | Subnet | Ospita |
-|---|---|---|
-| VLAN 1 (native) | 192.168.178.x | Management: workstation, host nebula |
-| VLAN 10 | 10.10.0.x | Core infra: sentinel (Technitium DNS) |
-| VLAN 20 | 10.20.0.x | Cluster: dyson (k3s) |
-| VLAN 30 | 10.30.0.x | Downloads: qBittorrent + VPN egress (traffico untrusted) |
-| VLAN 40 | 10.40.0.x | DMZ: Cloudflare Tunnel exit point (servizi pubblici) |
+| VLAN | Subnet | Gateway | Ospita | Accesso |
+|------|--------|---------|--------|---------|
+| 10 — Trusted | `10.10.0.0/24` | `10.10.0.1` | nebula (`10.10.0.2`), workstation admin | tutto |
+| 20 — Home | `10.20.0.0/24` | `10.20.0.1` | PC/telefoni altri utenti di casa | Internet + nebula :80/443; no SSH, no k3s API |
+| 30 — IoT/Guest | `10.30.0.0/24` | `10.30.0.1` | smart TV, IoT, ospiti WiFi | solo Internet |
+| 40 — Downloads | `10.40.0.0/24` | `10.40.0.1` | qBittorrent + VPN egress | solo Internet via VPN (aggiunta in Fase 4) |
 
-**Cosa cambia rispetto al Piano A:**
+**Regole firewall inter-VLAN (hEX S):**
 
-- Il bridge NixOS `br0` diventa VLAN-aware: ogni container/VM riceve un tag
-  VLAN nella propria configurazione di rete anziché stare tutti sulla stessa L2.
-- Il router (o NixOS come router inter-VLAN) applica policy di routing tra VLAN.
-- VLAN 30 (download) non può raggiungere VLAN 10/20 — isolamento hardware
-  garantito dallo switch, non solo da firewall software.
-- Gli IP cambiano: le VM vanno riconfigurate e i record DNS `lab.paroparo.it`
-  aggiornati nel playbook Technitium.
+```
+VLAN 10 → qualsiasi          ALLOW   # admin, accesso totale
+VLAN 20 → Internet           ALLOW
+VLAN 20 → nebula :80/:443    ALLOW   # servizi web Traefik
+VLAN 20 → nebula :22/:6443   DENY    # SSH e k3s API solo VLAN 10
+VLAN 20 → RFC1918            DENY
+VLAN 30 → Internet           ALLOW
+VLAN 30 → RFC1918            DENY    # isolamento totale dalla LAN
+VLAN 40 → Internet via VPN   ALLOW
+VLAN 40 → RFC1918            DENY
+```
 
-**DoD S18**: `dyson`, `sentinel` su VLAN distinte; ping cross-VLAN
-bloccato dove atteso; DNS `lab.paroparo.it` risolve correttamente dai nuovi IP.
+**Cosa cambia su nebula (NixOS):**
+
+- `enp1s0` passa da IP statico diretto a trunk 802.1Q
+- Subinterface `enp1s0.10` con IP `10.10.0.2/24` (unica necessaria)
+- Gateway diventa `10.10.0.1` (hEX S VLAN 10)
+- Record DNS `lab.paroparo.it` aggiornato a `10.10.0.2`
+- Firewall NixOS rimane invariato (le porte restano le stesse)
+
+**WireGuard ingress**: gira direttamente sull'hEX S (RouterOS v7 nativo).
+I peer remoti entrano in VLAN 10 come se fossero fisicamente in LAN.
+Zero modifiche a nebula.
+
+**DoD S18**: dispositivi su VLAN corrette; ping cross-VLAN bloccato dove
+atteso; `dig @10.10.0.2 lab.paroparo.it` risolve; servizi nebula
+raggiungibili da VLAN 20 su :443, non su :22.
 
 ---
 
