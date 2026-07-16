@@ -1,7 +1,7 @@
 # hosts/nebula/default.nix
 #
 # Configurazione principale dell'host nebula (Dell Optiplex 3050).
-# Aggrega: disko, hardware, networking + moduli riusabili da ./modules.
+# Aggrega: disko, hardware, networking + moduli host-specific + modules/common.nix
 #
 # Per buildare:
 #   nix build .#nixosConfigurations.nebula.config.system.build.toplevel
@@ -17,9 +17,11 @@
     ./hardware.nix
     ./networking.nix
     ./disko.nix
-
-    # Moduli riusabili del repo
-    ../../modules
+    ./backup.nix
+    ./impermanence.nix
+    ./k3s.nix
+    ./technitium.nix
+    ../../modules/common.nix
   ];
 
   # ── system.stateVersion: NON modificare dopo il primo install ────────────────

@@ -1,4 +1,4 @@
-# modules/backup.nix
+# # hosts/nebula/backup.nix
 #
 # Backup off-site via rclone → Cloudflare R2.
 # Sostituisce il vecchio playbook ansible/backup.yml (rimosso nella migrazione).
@@ -39,7 +39,7 @@
   #   RCLONE_CONFIG_R2_SECRET_ACCESS_KEY=xxx
   #   RCLONE_CONFIG_R2_ENDPOINT=https://xxx.r2.cloudflarestorage.com
   sops.secrets."backup/rclone-env" = {
-    sopsFile = ../secrets/rclone-env.enc.yaml;
+    sopsFile = ../../secrets/rclone-env.enc.yaml;
     format = "yaml";
   };
 

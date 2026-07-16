@@ -1,4 +1,4 @@
-# modules/k3s.nix
+# # hosts/nebula/k3s.nix
 #
 # k3s single-node server con Flannel (CNI default).
 #
@@ -79,11 +79,11 @@
   # k3s li applica come manifest al boot, PRIMA che Flux parta.
   sops.secrets = {
     "k3s/flux-git-auth" = {
-      sopsFile = ../secrets/flux-git-auth.enc.yaml;
+      sopsFile = ../../secrets/flux-git-auth.enc.yaml;
       format = "yaml";
     };
     "k3s/flux-sops-age" = {
-      sopsFile = ../secrets/flux-sops-age.enc.yaml;
+      sopsFile = ../../secrets/flux-sops-age.enc.yaml;
       format = "yaml";
     };
   };

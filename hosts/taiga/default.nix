@@ -25,10 +25,9 @@
   imports = [
     ./hardware.nix
     ./networking.nix
+    ./klipper.nix
     # moduli riusabili: common.nix (SSH, sops, utenti), impermanence, backup
     ../../modules/common.nix
-    # stack stampante
-    ../../modules/klipper.nix
   ];
 
   system.stateVersion = "25.11";

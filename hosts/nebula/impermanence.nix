@@ -1,4 +1,4 @@
-# modules/impermanence.nix
+# # hosts/nebula/impermanence.nix
 #
 # Lista dichiarativa di cosa sopravvive ai reboot in /persist.
 # Il modulo impermanence crea bind mount da /persist/<path> → /<path>.

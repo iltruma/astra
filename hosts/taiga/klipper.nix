@@ -1,4 +1,4 @@
-# modules/klipper.nix
+# # hosts/taiga/klipper.nix
 #
 # Stack stampa 3D: Klipper + Moonraker + Mainsail + TLS.
 # Usato da hosts/taiga.
@@ -26,10 +26,10 @@
     enable = true;
     mutableConfig = true;
 
-    configFile = lib.mkIf (builtins.pathExists ../hosts/taiga/printer.cfg)
-      ../hosts/taiga/printer.cfg;
+    configFile = lib.mkIf (builtins.pathExists ./printer.cfg)
+      ./printer.cfg;
 
-    settings = lib.mkIf (!(builtins.pathExists ../hosts/taiga/printer.cfg)) {
+    settings = lib.mkIf (!(builtins.pathExists ./printer.cfg)) {
       printer = {
         kinematics = "setta il giusto printer.cfg";
         max_velocity = 0;
@@ -96,7 +96,7 @@
 
   # ── sops-nix: token Cloudflare per ACME ──────────────────────────────────────
   sops.secrets."taiga/cloudflare-acme-env" = {
-    sopsFile = ../secrets/taiga-cloudflare-acme.enc.yaml;
+    sopsFile = ../../secrets/taiga-cloudflare-acme.enc.yaml;
     format = "yaml";
     # owner nginx/acme non serve: il file è letto dal processo acme (root)
   };

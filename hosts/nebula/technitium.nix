@@ -1,4 +1,4 @@
-# modules/technitium.nix
+# # hosts/nebula/technitium.nix
 #
 # Technitium DNS server come servizio NixOS nativo.
 # Modulo NixOS ufficiale in nixpkgs: services.technitium-dns-server (v15.2.0).
