@@ -1,42 +1,21 @@
-# # hosts/nebula/k3s.nix
-#
-# k3s single-node server con Flannel (CNI default).
-#
-# Flannel è il CNI bundled di k3s: funziona out of the box, nessun bootstrap
-# dance. Cilium potrà essere aggiunto via Flux in un secondo momento quando
-# il cluster è stabile e si vuole esplorare networking avanzato (eBPF, Hubble).
-#
-# Servizi disabilitati dal bundled k3s:
-#   - traefik:        gestito da Flux in k8s/infra/traefik/
-#   - servicelb:      non serve su single-node
-#   - local-storage:  non serve, abbiamo /var/lib/rancher/k3s su ZFS
-#   - metrics-server: non serve (Beszel copre il monitoring)
-#
-# Servizi mantenuti (default k3s):
-#   - flannel:   CNI di default, semplice e robusto
-#   - coredns:   Service discovery k8s (con ConfigMap custom per Technitium)
-#   - kube-proxy: gestione Service IP
-
 { config, lib, pkgs, ... }:
 
 {
-  # ── k3s: abilitazione e configurazione ───────────────────────────────────────
   services.k3s = {
     enable = true;
     role = "server";
 
     extraFlags = toString [
-      "--disable=traefik"              # Traefik via Flux
-      "--disable=servicelb"            # non serve su single-node
+      "--disable=traefik"              # gestito da Flux
+      "--disable=servicelb"
       "--disable=local-storage"        # ZFS fornisce storage locale
       "--disable=metrics-server"       # Beszel copre monitoring
-      "--write-kubeconfig-mode=0644"   # kubeconfig leggibile da utente non-root
+      "--write-kubeconfig-mode=0644"
     ];
 
-    # ── CoreDNS custom: delega a Technitium per la zona lab.paroparo.it ───────
-    # Override del ConfigMap bundled: nome esatto "coredns" richiesto da k3s.
-    # services.k3s.manifests piazza il YAML in /var/lib/rancher/k3s/server/manifests/
-    # e lo applica automaticamente al boot.
+    # Override del ConfigMap bundled: delega a Technitium per lab.paroparo.it.
+    # services.k3s.manifests piazza il file in /var/lib/rancher/k3s/server/manifests/
+    # e lo applica al boot; il nome "coredns" è richiesto da k3s.
     manifests."coredns-custom" = {
       content = {
         apiVersion = "v1";
@@ -72,11 +51,6 @@
     };
   };
 
-  # ── sops-nix: secret per Flux bootstrap ──────────────────────────────────────
-  # Flux ha bisogno di:
-  #   - flux-git-auth:  SSH key per pull dal repo GitHub
-  #   - flux-sops-age:  chiave age per decifrare i *.enc.yaml
-  # k3s li applica come manifest al boot, PRIMA che Flux parta.
   sops.secrets = {
     "k3s/flux-git-auth" = {
       sopsFile = ../../secrets/flux-git-auth.enc.yaml;
@@ -88,21 +62,14 @@
     };
   };
 
-  # ── Systemd tmpfiles: symlink dei secret Flux in manifests/ ──────────────────
+  # Symlink dei secret Flux in manifests/ prima che k3s parta
   systemd.tmpfiles.rules = [
     "d /var/lib/rancher/k3s/server/manifests 0755 root root - -"
     "L+ /var/lib/rancher/k3s/server/manifests/00-flux-git-auth.yaml - - - - /run/secrets/k3s/flux-git-auth"
     "L+ /var/lib/rancher/k3s/server/manifests/00-flux-sops-age.yaml - - - - /run/secrets/k3s/flux-sops-age"
   ];
 
-  # ── Firewall ─────────────────────────────────────────────────────────────────
-  # 6443 è già aperto in networking.nix.
-  networking.firewall.allowedTCPPorts = [
-    10250  # kubelet API (metrics)
-  ];
+  networking.firewall.allowedTCPPorts = [ 10250 ]; # kubelet API
 
-  # ── Pacchetti CLI per gestione k8s ──────────────────────────────────────────
-  environment.systemPackages = with pkgs; [
-    k3s  # include kubectl, crictl, ecc.
-  ];
+  environment.systemPackages = with pkgs; [ k3s ];
 }

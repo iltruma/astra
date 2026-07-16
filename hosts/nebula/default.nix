@@ -1,15 +1,3 @@
-# hosts/nebula/default.nix
-#
-# Configurazione principale dell'host nebula (Dell Optiplex 3050).
-# Aggrega: disko, hardware, networking + moduli host-specific + modules/common.nix
-#
-# Per buildare:
-#   nix build .#nixosConfigurations.nebula.config.system.build.toplevel
-#
-# Per applicare:
-#   nixos-rebuild switch --flake .#nebula
-# (oppure --target-host root@192.168.178.2 per buildare in remoto)
-
 { config, lib, pkgs, ... }:
 
 {
@@ -24,13 +12,10 @@
     ../../modules/common.nix
   ];
 
-  # ── system.stateVersion: NON modificare dopo il primo install ────────────────
-  system.stateVersion = "25.11";
+  system.stateVersion = "25.11"; # NON modificare dopo il primo install
 
-  # ── console: keyboard italiano ───────────────────────────────────────────────
   console.keyMap = "it";
 
-  # ── Nix settings ────────────────────────────────────────────────────────────
   nix = {
     settings = {
       auto-optimise-store = true;
@@ -45,6 +30,5 @@
     };
   };
 
-  # ── Manciata di doc serve a zero se leggi i .md ────────────────────────────
   documentation.enable = false;
 }

@@ -1,11 +1,3 @@
-# hosts/taiga/networking.nix
-#
-# Rete per Taiga (Raspberry Pi 4, stampante 3D).
-#
-# IP statico: 192.168.178.43 (attuale su MainsailOS, mantenuto per coerenza)
-# Gateway: 192.168.178.1 (Fritz!Box iris)
-# DNS: 192.168.178.2 (Technitium su nebula)
-
 { ... }:
 
 {
@@ -22,16 +14,15 @@
     defaultGateway = "192.168.178.1";
     nameservers = [
       "192.168.178.2"  # Technitium nebula
-      "1.1.1.1"        # fallback
+      "1.1.1.1"
     ];
 
-    # ── Firewall ───────────────────────────────────────────────────────────────
     firewall = {
       enable = true;
       allowedTCPPorts = [
         22    # SSH
-        80    # HTTP (redirect → HTTPS)
-        443   # HTTPS Mainsail (TLS Let's Encrypt)
+        80    # HTTP
+        443   # HTTPS Mainsail
         7125  # Moonraker API
       ];
     };
