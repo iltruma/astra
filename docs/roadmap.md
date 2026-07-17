@@ -147,6 +147,7 @@ Obiettivo: usare tutto il backbone (GitOps + TLS + ingress) per pubblicare codic
 | Sprint | Servizio                | Note |
 |--------|-------------------------|------|
 | S15    | Jellyfin                | media server, transcoding HW via Intel QuickSync |
+| S15b   | Tailscale               | accesso remoto a Jellyfin da device esterni (es. Android TV babbo). Modulo NixOS su nebula + app Tailscale sulla TV. Gratis fino a 3 utenti/100 device. |
 | S16    | Download stack          | qBittorrent (⚠️ dietro VPN egress) + Prowlarr + Sonarr + Radarr + Bazarr |
 | S17    | Jellyseerr              | UI di richiesta film/serie |
 
