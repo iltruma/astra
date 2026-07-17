@@ -172,15 +172,18 @@ hEX S (PPPoE, routing inter-VLAN, DHCP, firewall, WireGuard ingress, CAPsMAN)
     ├── Ether2: trunk 802.1Q → nebula (enp1s0)
     ├── Ether3: access VLAN 10 → workstation admin
     ├── Ether4: access VLAN 20 → device cablati altri utenti
-    └── Ether5: trunk 802.1Q → cAP ax (+ injector PoE 802.3af)
+    └── Ether5: PoE passivo 24V → cAP ax (AP only, no PoE-out)
                                ├── SSID "home"    → VLAN 10
                                ├── SSID "family"  → VLAN 20
                                └── SSID "guest"   → VLAN 30
 ```
 
-> ⚠️ **Alimentazione cAP ax**: usare l'alimentatore diretto incluso nella
-> confezione. Il PoE passivo dell'hEX S (tensione fissa, senza negoziazione
-> 802.3af/at) potrebbe danneggiare il cAP ax se fuori range.
+> **Alimentazione cAP ax**: hEX S Ether5 eroga PoE passivo alla stessa tensione
+> dell'alimentatore in ingresso (24V con PSU incluso = 12W max). Il cAP ax
+> accetta 18-57V e usato solo come AP consuma 6-11W reali — dentro il budget.
+> Nessun injector né alimentatore separato necessario.
+> Se in futuro compare `overcurrent` nei log RouterOS su Ether5, acquistare
+> alimentatore 48V (es. MikroTik 48POW, ~18€) per portare il budget a 24W.
 
 ### Schema VLAN
 

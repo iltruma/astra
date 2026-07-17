@@ -189,16 +189,17 @@ hEX S (router, gateway, DHCP, firewall inter-VLAN, WireGuard ingress, CAPsMAN)
     ├── Ether2: trunk 802.1Q → nebula (enp1s0, tutte le VLAN tagged)
     ├── Ether3: access VLAN 10 → workstation admin
     ├── Ether4: access VLAN 20 → altri device di casa (cablati)
-    └── Ether5: trunk 802.1Q → cAP ax (+ injector PoE 802.3af)
+    └── Ether5: PoE passivo 24V → cAP ax (AP only, no PoE-out)
                                ├── SSID "home"    → VLAN 10
                                ├── SSID "family"  → VLAN 20
                                └── SSID "guest"   → VLAN 30
 ```
 
-> ⚠️ **Alimentazione cAP ax**: usare l'alimentatore diretto incluso nella
-> confezione. Il PoE passivo dell'hEX S (Ether5, tensione fissa senza
-> negoziazione) potrebbe danneggiare il cAP ax se fuori range — non testare.
-> Ether5 rimane libero per altri device.
+> **Alimentazione cAP ax via PoE passivo 24V**: il cAP ax accetta 18-57V in
+> ingresso (confermato da datasheet e forum MikroTik). L'hEX S con alimentatore
+> 24V incluso eroga 24V passivi su Ether5 @ 0.5A = 12W. Il cAP ax usato solo
+> come AP (senza PoE-out attivo) consuma 6-11W reali — dentro il budget.
+> Zero alimentatori aggiuntivi necessari.
 
 **Schema VLAN target:**
 
