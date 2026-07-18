@@ -28,6 +28,17 @@ spec:
     # Disabilita il Traefik default di k3s (già rimpiazzato da questo)
     deployment:
       replicas: 1
+    # hostNetwork: Traefik ascolta direttamente su 80/443 del nodo (no NAT,
+    # no Service LoadBalancer, no klipper-lb necessario). dnsPolicy
+    # ClusterFirstWithHostNet mantiene il DNS del cluster per la risoluzione
+    # dei Service (es. kubernetesCRD provider). Single-node, niente rischio
+    # di conflitto porta con altri pod.
+    hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
+    # hostNetwork: Traefik ascolta su 80/443 del nodo, non serve Service
+    # LoadBalancer. ClusterIP evita un Service <pending> inutile.
+    service:
+      type: ClusterIP
     ports:
       web:
         http:

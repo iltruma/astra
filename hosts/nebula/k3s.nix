@@ -7,7 +7,7 @@
 
     extraFlags = toString [
       "--disable=traefik"              # gestito da Flux
-      "--disable=servicelb"
+      "--disable=servicelb"            # Traefik in hostNetwork, niente LoadBalancer
       "--disable=metrics-server"       # Beszel copre monitoring
       "--write-kubeconfig-mode=0644"
     ];
