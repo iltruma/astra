@@ -38,6 +38,11 @@ spec:
     deployment:
       replicas: 1
       dnsPolicy: ClusterFirstWithHostNet
+      # hostNetwork: serve Recreate strategy perché il nuovo pod bind
+      # 80/443/8080/9100 in hostNet e RollingUpdate farebbe Pending per
+      # conflict porte col vecchio pod. Recreate termina prima.
+      strategy:
+        type: Recreate
     ports:
       web:
         port: 80
