@@ -16,6 +16,16 @@
     # Override del ConfigMap bundled: delega a Technitium per lab.paroparo.it.
     # services.k3s.manifests piazza il file in /var/lib/rancher/k3s/server/manifests/
     # e lo applica al boot; il nome "coredns" è richiesto da k3s.
+    # Namespace flux-system: k3s non crea namespace implicitamente quando applica
+    # i manifest in server/manifests/, quindi va materializzato prima dei Secret.
+    # Naming: "flux-namespace" < "flux-secret-*" (n < s) → ordine lessicale garantito.
+    manifests."flux-namespace" = {
+      content = {
+        apiVersion = "v1";
+        kind = "Namespace";
+        metadata.name = "flux-system";
+      };
+    };
     manifests."coredns-custom" = {
       content = {
         apiVersion = "v1";
@@ -65,8 +75,8 @@
   # Symlink dei secret Flux in manifests/ prima che k3s parta
   systemd.tmpfiles.rules = [
     "d /var/lib/rancher/k3s/server/manifests 0755 root root - -"
-    "L+ /var/lib/rancher/k3s/server/manifests/00-flux-git-auth.yaml - - - - /run/secrets/k3s/flux-git-auth"
-    "L+ /var/lib/rancher/k3s/server/manifests/00-flux-sops-age.yaml - - - - /run/secrets/k3s/flux-sops-age"
+    "L+ /var/lib/rancher/k3s/server/manifests/flux-secret-git-auth.yaml - - - - /run/secrets/k3s/flux-git-auth"
+    "L+ /var/lib/rancher/k3s/server/manifests/flux-secret-sops-age.yaml - - - - /run/secrets/k3s/flux-sops-age"
   ];
 
   networking.firewall.allowedTCPPorts = [ 10250 ]; # kubelet API
