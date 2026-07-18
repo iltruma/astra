@@ -4,12 +4,10 @@ metadata:
   name: traefik
   namespace: flux-system
 spec:
-  # Reverse proxy. Dipende da infrastructure (che garantisce che cert-manager
-  # sia installato e i ClusterIssuer configurati, prerequisiti per i TLSStore
-  # e i certificati Let's Encrypt).
-  dependsOn:
-    - name: infrastructure
-  interval: 1h
+  # Controller layer: installa Traefik e le sue CRD (traefik.io/v1alpha1).
+  # Aspetta (wait + healthChecks sul Deployment e sulle CRD) prima di
+  # segnalare Ready. Il Kustomization "traefik-config" dipende da questo.
+  interval: 5m
   retryInterval: 5m
   timeout: 10m
   prune: true
@@ -17,4 +15,18 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./k8s/infra/traefik
+  path: ./k8s/infra/traefik/install
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: traefik
+      namespace: traefik
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: tlsstores.traefik.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: serverstransports.traefik.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: ingressroutes.traefik.io
