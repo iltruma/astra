@@ -8,7 +8,6 @@
     extraFlags = toString [
       "--disable=traefik"              # gestito da Flux
       "--disable=servicelb"
-      "--disable=local-storage"        # ZFS fornisce storage locale
       "--disable=metrics-server"       # Beszel copre monitoring
       "--write-kubeconfig-mode=0644"
     ];
