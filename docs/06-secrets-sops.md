@@ -44,6 +44,44 @@ chiave, stesso `.sops.yaml`, stessa CLI.
 
 ## File di config
 
+### Bootstrap al primo install
+
+sops-nix decifra i secret leggendo la chiave da `sops.age.keyFile`
+(default `/etc/sops/age/keys.txt`, repo-specific `/persist/sops/age/keys.txt`).
+Al primo install, `/persist` non esiste ancora, quindi la chiave va pushata sul
+target durante l'install.
+
+Il pattern è documentato in [00-nixos-installation.md §3.1](00-nixos-installation.md#31-prepara-la-chiave-age-per-extra-files):
+si prepara una directory con la struttura del path di destinazione
+(`<extra>/persist/sops/age/keys.txt`) e si passa a nixos-anywhere via
+`--extra-files`, che la copia in `/mnt` (la root del sistema in costruzione)
+prima dell'attivazione.
+
+```bash
+EXTRA=$(mktemp -d)
+mkdir -p "$EXTRA/persist/sops/age"
+cp ~/.config/sops/age/keys.txt "$EXTRA/persist/sops/age/keys.txt"
+chmod 600 "$EXTRA/persist/sops/age/keys.txt"
+
+nix run github:nix-community/nixos-anywhere -- \
+  --flake .#nebula \
+  --target-host root@192.168.178.2 \
+  --build-on local \
+  --extra-files "$EXTRA"
+```
+
+Dopo il primo switch, verifica che i secret siano stati decifrati:
+
+```bash
+ssh cosimo@192.168.178.2 'sudo ls /run/secrets/'
+# Deve contenere: k3s/  backup/  ...
+```
+
+> **Perché è obbligatorio**: senza la chiave in `/persist`, sops-nix non può
+> decifrare nulla e l'attivazione di k3s/Flux/rclone-backup fallisce. Il
+> `--extra-files` è il bootstrap standard riconosciuto da nixos-anywhere
+> (vedi [docs ufficiali](https://nix-community.github.io/nixos-anywhere/howtos/secrets.html)).
+
 ### `.sops.yaml` (root del repo)
 
 ```yaml
@@ -89,27 +127,29 @@ Decifrati da **sops-nix** all'attivazione NixOS, montati in `/run/secrets/`
 
 | File | Contenuto | Consumer |
 |------|-----------|----------|
-| `flux-git-auth.enc.yaml` | SSH key per Flux pull da GitHub | k3s (manifest `00-flux-git-auth.yaml`) |
+| `flux-git-auth.enc.yaml` | SSH key per Flux pull da GitHub | k3s (manifest `flux-secret-git-auth.yaml`) |
 | `flux-sops-age.enc.yaml` | Chiave age privata per Flux SOPS | k3s (Secret `sops-age` in `flux-system`) |
 | `rclone-env.enc.yaml` | Credenziali R2 per backup | systemd `rclone-backup` (env file) |
 
-### Configurazione in `modules/k3s.nix`
+### Configurazione in `hosts/nebula/k3s.nix`
 
 ```nix
 sops.secrets = {
   "k3s/flux-git-auth" = {
-    sopsFile = ../secrets/flux-git-auth.enc.yaml;
+    sopsFile = ../../secrets/flux-git-auth.enc.yaml;
     format = "yaml";
   };
   "k3s/flux-sops-age" = {
-    sopsFile = ../secrets/flux-sops-age.enc.yaml;
+    sopsFile = ../../secrets/flux-sops-age.enc.yaml;
     format = "yaml";
   };
 };
 ```
 
 I secret sono montati in `/run/secrets/k3s/...` e symlinkati in
-`/var/lib/rancher/k3s/server/manifests/00-*.yaml` via `systemd.tmpfiles.rules`.
+`/var/lib/rancher/k3s/server/manifests/flux-secret-*.yaml` via `systemd.tmpfiles.rules`
+(il manifest `flux-namespace` che crea il namespace `flux-system` è applicato
+direttamente dal modulo k3s, non via symlink).
 
 ### Configurazione in `modules/backup.nix`
 
