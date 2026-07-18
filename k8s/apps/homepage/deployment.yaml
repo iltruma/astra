@@ -21,8 +21,15 @@ spec:
             - name: http
               containerPort: 3000
           env:
+            # k8s probe manda l'IP del pod come Host header; serve metterlo
+            # nella allowlist. fieldRef lo cattura a runtime (vedi
+            # https://gethomepage.dev/installation/k8s/).
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: HOMEPAGE_ALLOWED_HOSTS
-              value: homepage.lab.paroparo.it
+              value: "$(MY_POD_IP):3000,homepage.lab.paroparo.it"
           livenessProbe:
             httpGet:
               path: /api/healthcheck
