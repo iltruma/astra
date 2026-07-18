@@ -23,6 +23,10 @@ $TTL 300
 ; ── NS ───────────────────────────────────────────────────────────────────────
 @       IN  NS  ns1.lab.paroparo.it.
 ns1     IN  A   192.168.178.2
+ns1     IN  AAAA  (vuoto per ora — solo IPv4 nel Fritz!Box attuale)
+
+; ── Apex (lab.paroparo.it stesso punta a nebula/Traefik) ─────────────────────
+@       IN  A   192.168.178.2
 
 ; ── Host fisici ──────────────────────────────────────────────────────────────
 nebula IN  A   192.168.178.2
@@ -39,5 +43,15 @@ uptime      IN  A   192.168.178.2
 homepage    IN  A   192.168.178.2
 beszel      IN  A   192.168.178.2
 
+; ── CAA: limita quali CA possono emettere cert per lab.paroparo.it ─────────
+; Best practice per hardening: blocca CA non autorizzate.
+; 0 issue = chiunque può emettere; "letsencrypt.org" = solo Let's Encrypt.
+@       IN  CAA 0 issue "letsencrypt.org"
+@       IN  CAA 0 issuewild "letsencrypt.org"
+@       IN  CAA 0 iodef "mailto:admin@lab.paroparo.it"
+
 ; ── Servizi su Taiga (override del wildcard → Pi invece di nebula) ───────────
 ; taiga già definito sopra come host fisico
+
+; ── TXT (verifica dominio, SPF se servisse mail in futuro) ──────────────────
+@       IN  TXT "v=spf1 -all"  ; lab.paroparo.it non manda mail → reject all
