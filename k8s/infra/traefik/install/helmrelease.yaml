@@ -43,8 +43,26 @@ spec:
     providers:
       kubernetesCRD:
         enabled: true
+        # allowCrossNamespace: permette a un IngressRoute in namespace
+        # "homepage" di referenziare un Middleware o TLSStore in
+        # "kube-system" (es. il nostro default-tlsstore). Default false
+        # → silenziosamente ignora cross-namespace refs.
+        allowCrossNamespace: true
       kubernetesIngress:
         enabled: true
+        # Permette Ingress con serviceName che punta a Service non ancora
+        # pronte (utile durante bootstrap prima che i pod siano ready).
+        allowEmptyServices: true
+    ingressClass:
+      enabled: true
+      isDefaultClass: true
     ingressRoute:
       dashboard:
         enabled: false   # dashboard esposta manualmente se serve
+    service:
+      type: LoadBalancer
+      spec:
+        # externalTrafficPolicy: Local preserva il client IP (necessario
+        # per IP whitelist middleware). Default Cluster → NAT, IP perso.
+        # Single-node: Local è sempre OK.
+        externalTrafficPolicy: Local
