@@ -182,12 +182,17 @@ nixos-install --flake .#nebula
 reboot
 
 # 5. Applica update da remoto (da workstation)
-nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
+# Workstation NixOS:
+nixos-rebuild switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
+# Workstation WSL/macOS:
+nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
 
 # 6. Kubernetes
-ssh root@192.168.178.2
-k3s kubectl get nodes
-k3s flux get kustomizations
+ssh cosimo@192.168.178.2
+sudo k3s kubectl get nodes
+sudo k3s flux get kustomizations
 ```
 
 > Il flake NixOS è idempotente: `nixos-rebuild switch` può essere rieseguito

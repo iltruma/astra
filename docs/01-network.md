@@ -141,7 +141,7 @@ Corefile di default. È in `/var/lib/rancher/k3s/server/manifests/00-coredns-cus
 ```bash
 # Da workstation sulla LAN
 ping 192.168.178.2                       # nebula risponde
-ssh root@192.168.178.2                   # SSH funziona
+ssh cosimo@192.168.178.2                # SSH funziona
 dig @192.168.178.2 lab.paroparo.it       # DNS split-horizon funziona
 dig @192.168.178.2 uptime.lab.paroparo.it # wildcard → 192.168.178.2
 curl -v https://uptime.lab.paroparo.it   # Traefik + cert-manager

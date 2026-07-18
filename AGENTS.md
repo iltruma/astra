@@ -37,8 +37,11 @@ avere l'infrastruttura, ma capirla. Quindi:
 - Non proporre soluzioni che richiedano `sudo` se non strettamente necessario.
 - Se l'utente condivide un secret per errore, avvisalo immediatamente e
   consiglia rotazione.
-- Per gestire l'host NixOS (nebula), operare via SSH da workstation.
-  Per applicare config: `nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2`.
+- Per gestire l'host NixOS (nebula), operare via SSH da workstation come `cosimo` (sudo nopasswd via `wheel`).
+  Per applicare config: `nixos-rebuild switch --flake .#nebula --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo`
+  (su workstation non-NixOS: `nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo`).
+  `--use-remote-sudo` è necessario: senza, nixos-rebuild fallisce con `Permission denied` su `/nix/var/nix/profiles/` perché prova a scrivere il system profile come utente non-root.
+  L'install iniziale richiede `root@192.168.178.2` via nixos-anywhere (vedi `docs/00-nixos-installation.md`).
 
 ## Tool e workflow
 
@@ -91,12 +94,17 @@ docs/             - Documentazione step-by-step (roadmap, decisioni, migration)
 ```bash
 # Build/apply NixOS (da workstation, contro nebula remoto)
 nix flake check
-nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
+# Workstation NixOS:
+nixos-rebuild switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
+# Workstation WSL/macOS:
+nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
 
 # k3s (via SSH su nebula)
-ssh root@192.168.178.2
-k3s kubectl get nodes
-k3s kubectl get pods -A
+ssh cosimo@192.168.178.2
+sudo k3s kubectl get nodes
+sudo k3s kubectl get pods -A
 
 # Flux
 k3s flux get kustomizations

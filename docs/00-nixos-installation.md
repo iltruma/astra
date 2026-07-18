@@ -3,9 +3,11 @@
 Guida operativa per installare NixOS baremetal su Nebula (Dell Optiplex 3050).
 
 nixos-anywhere installa NixOS via SSH su qualsiasi Linux già avviato sul target,
-usando kexec per caricare il kernel NixOS in memoria e disko per partizionare.
+usando disko per partizionare. Il target deve essere avviato con un'immagine
+NixOS (custom o ufficiale) con SSH attivo e la chiave della workstation
+autorizzata in `/root/.ssh/authorized_keys`.
 
-**Prima installazione** (disco vuoto): installa Debian minimal con SSH → poi nixos-anywhere.
+**Prima installazione**: build ISO custom da flake → flash USB → boot → nixos-anywhere.
 **Reinstall futuri**: nixos-anywhere direttamente, NixOS risponde già su SSH.
 
 > **Prerequisito**: backup di qualsiasi dato da conservare prima di procedere.
@@ -13,121 +15,233 @@ usando kexec per caricare il kernel NixOS in memoria e disko per partizionare.
 ## Prerequisiti
 
 - Workstation con `nix` installato e flakes abilitati
-- Nebula raggiungibile via SSH come root (o utente con sudo passwordless)
-- Chiave SSH della workstation autorizzata sul target
+- Nebula raggiungibile via SSH:
+  - come `root` durante l'install (nixos-anywhere esegue disko/install)
+  - come `cosimo` per operazioni post-install (sudo nopasswd via `wheel`)
+- Chiave SSH della workstation autorizzata sul target (vedi `modules/keys.nix`)
+- Chiave age privata per sops accessibile dalla workstation
+
+> **Workstation NixOS vs WSL/macOS**: su workstation NixOS hai `nixos-rebuild` e
+> `nixos-anywhere` come binari nativi. Su WSL/macOS li lanci via
+> `nix run nixpkgs#nixos-rebuild --` o `nix run github:nix-community/nixos-anywhere --`.
 
 ---
 
-## Step 1 — Prima installazione: prepara il target con Debian minimal
+## Step 1 — Prepara USB con ISO NixOS custom
 
-Solo per la prima installazione su disco vuoto. Se NixOS è già presente, salta a Step 3.
+L'installer ISO custom (configurazione in `hosts/installer/`) ha già la chiave
+SSH della workstation e IP statico configurati, quindi al boot nebula è subito
+raggiungibile senza setup aggiuntivo.
 
-1. Scarica [Debian netinst ISO](https://www.debian.org/CD/netinst/) e scrivila su USB
-2. Boot da USB su Nebula (F12 → boot menu Dell)
-3. Installazione Debian minimal: no desktop, no extra packages, solo `SSH server`
-4. Configura IP statico durante l'install: `192.168.178.2/24`, gateway `192.168.178.1`
-5. Abilita login root via SSH: in `/etc/ssh/sshd_config` imposta `PermitRootLogin yes`
-6. Aggiungi la SSH key della workstation: `ssh-copy-id root@192.168.178.2`
+```bash
+cd ~/astra
+nix build .#nixosConfigurations.installer.config.system.build.isoImage
+# Risultato in result/iso/nixos-minimal-*.iso
+# Flash su USB (>= 4GB):
+sudo dd if=result/iso/nixos-minimal-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+sync
+```
+
+Boot nebula da USB (F12 → boot menu Dell). Il sistema si avvia con:
+- IP statico `192.168.178.2/24`, gateway `192.168.178.1`
+- sshd attivo con `PermitRootLogin yes` e `PasswordAuthentication yes`
+- `authorized_keys` = chiave della workstation (via `modules/keys.nix`)
 
 Verifica connettività:
 ```bash
-ssh root@192.168.178.2 uname -a
-# Linux nebula ... x86_64 GNU/Linux
+ssh -o StrictHostKeyChecking=accept-new root@192.168.178.2 uname -a
+# Linux nixos 6.12.x ... x86_64 GNU/Linux
 ```
 
-Da questo punto in poi, **USB non serve più**: tutti i reinstall futuri usano nixos-anywhere via SSH.
+> **Alternativa: Debian minimal**. Se preferisci partire da Debian (più familiare
+> per il debug live), scarica la netinst ISO e installa con SSH server, IP
+> statico, e `PermitRootLogin yes`. Stesso punto di arrivo.
 
 ---
 
-## Step 2 — Prepara i secrets
+## Step 2 — Prepara i secrets (una tantum, prima della prima install)
 
-Sulla workstation:
+Sulla workstation, se non hai già una chiave age:
 
 ```bash
-# Genera/riusa la chiave age del repo
-age-keygen -o age-key.txt
-# age-key.txt contiene la chiave privata (NON committare)
-# La chiave pubblica è nella prima riga: # public key: age1xxxx...
+# Genera la chiave age (una volta per tutto il repo)
+age-keygen -o ~/.config/sops/age/keys.txt
+# Output:
+#   Public key: age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# Salva la chiave pubblica in .sops.yaml (root del repo) al posto di AGE_PUBLIC_KEY
 
-# Aggiorna .sops.yaml con la chiave pubblica
-# Sostituisci AGE_PUBLIC_KEY in .sops.yaml (root del repo)
-
-# Popola i 4 file secret (vedi secrets/*.enc.yaml per lo schema):
-#   secrets/secrets.yaml                 (opzionale, aggregato)
+# Popola i file secret (vedi secrets/*.enc.yaml per lo schema):
 #   secrets/flux-git-auth.enc.yaml       (SSH key per Flux)
 #   secrets/flux-sops-age.enc.yaml       (chiave age per k8s)
 #   secrets/rclone-env.enc.yaml          (credenziali R2)
 
-# Cifra con sops
+# Cifra con sops (solo se hai rigenerato .sops.yaml; i file .enc.yaml in repo
+# sono già cifrati con la chiave corrente)
 sops --encrypt --in-place secrets/flux-git-auth.enc.yaml
 sops --encrypt --in-place secrets/flux-sops-age.enc.yaml
 sops --encrypt --in-place secrets/rclone-env.enc.yaml
 
-# Genera l'hostId univoco per ZFS
-head -c4 /dev/urandom | od -A none -t x4
-# Aggiorna il valore in hosts/nebula/hardware.nix → networking.hostId
-
 # Aggiungi la tua SSH pubblica in modules/common.nix:
 #   users.users.cosimo.openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAA..." ];
 
-# Clona il repo sulla workstation (se non già presente)
-git clone <repo> ~/astra
-cd ~/astra
+# hostId univoco per ZFS (una volta per host)
+head -c4 /dev/urandom | od -A none -t x4
+# Aggiorna in hosts/nebula/hardware.nix → networking.hostId
 ```
+
+> **Path chiave age**: il default sops-nix è `~/.config/sops/age/keys.txt`, ma il
+> repo usa `/persist/sops/age/keys.txt` come path sul target dopo l'install
+> (vedi `modules/common.nix` riga 27). Sulla workstation puoi tenerla dove
+> preferisci — basta che sia raggiungibile allo Step 3.1.
+
+> **Backup della chiave age FONDAMENTALE**: senza la chiave privata, i secret
+> sono irrecuperabili. Conservala in password manager + copia offline cifrata.
+> Il backup rclone NON include la chiave.
+
+---
 
 ## Step 3 — Esegui nixos-anywhere
 
 nixos-anywhere si connette a Nebula via SSH, partiziona il disco con disko,
-installa NixOS e riavvia. Tutto da un singolo comando sulla workstation.
+installa NixOS e riavvia.
 
-⚠️ **Distruttivo**: cancella tutto su `/dev/sda`.
+⚠️ **Distruttivo**: cancella tutto su `/dev/sda` del target.
+
+### 3.1 Prepara la chiave age per `--extra-files`
+
+nixos-anywhere deve pushare la chiave age su `/persist/sops/age/keys.txt` PRIMA
+del primo switch (altrimenti sops-nix non riesce a decifrare i secret al boot).
+La struttura della dir passata a `--extra-files` deve rispecchiare il path di
+destinazione sul target.
 
 ```bash
-nix run github:nix-community/nixos-anywhere -- \
-  --flake .#nebula \
-  root@192.168.178.2
+# Esempio: workstation con chiave in ~/.config/sops/age/keys.txt
+EXTRA=$(mktemp -d)
+mkdir -p "$EXTRA/persist/sops/age"
+cp ~/.config/sops/age/keys.txt "$EXTRA/persist/sops/age/keys.txt"
+chmod 600 "$EXTRA/persist/sops/age/keys.txt"
+echo "$EXTRA"  # ricorda questo path per il prossimo comando
 ```
 
-nixos-anywhere:
-1. Copia il flake sul target via SSH
-2. Esegue `kexec` per caricare un NixOS live in RAM (il Debian sparisce)
-3. Esegue disko → partiziona `/dev/sda` con ZFS
-4. Esegue `nixos-install`
-5. Riavvia in NixOS
+> **Adatta il path sorgente** a dove tieni effettivamente la chiave
+> (es. `~/age/age-houston.txt` → copia in `$EXTRA/persist/sops/age/keys.txt`).
+
+### 3.2 Lancia nixos-anywhere
+
+```bash
+cd ~/astra
+nix run github:nix-community/nixos-anywhere -- \
+  --flake .#nebula \
+  --target-host root@192.168.178.2 \
+  --build-on local \
+  --extra-files "$EXTRA"
+```
+
+> **Workstation NixOS**: puoi usare direttamente `nixos-anywhere` se hai il
+> binario installato. Per WSL/macOS la forma `nix run ... --` è obbligatoria.
+
+nixos-anywhere esegue in sequenza:
+1. Connessione SSH (root, no password — usa la chiave autorizzata)
+2. `disko` → partiziona `/dev/sda` con ZFS (pool `tank`)
+3. Copia la chiave age in `/persist/sops/age/keys.txt` (via `--extra-files`)
+4. `nixos-install` con il flake `.#nebula`
+5. Reboot in NixOS
+
+Durata: 10-30 min a seconda di quante cose scarica/builda. Output in tempo reale.
 
 Vedi [02-storage.md](02-storage.md) per il layout ZFS dettagliato.
 
-## Step 4 — Verifica post-install
+---
+
+## Step 4 — Switch completo e verifica post-install
+
+Dopo il reboot automatico, nebula è in NixOS ma con la configurazione "base" di
+nixos-anywhere. Per attivare k3s, Technitium, Flux, etc., serve uno `switch`
+completo.
+
+### 4.1 Switch completo
 
 ```bash
-# SSH dalla workstation
-ssh root@192.168.178.2
+cd ~/astra
 
-# Verifica servizi host
-systemctl status technitium-dns-server
-systemctl status k3s
-systemctl status rclone-backup.timer    # attivo, prossimo run alle 03:00
+# Workstation NixOS:
+nixos-rebuild switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 \
+  --build-host localhost \
+  --use-remote-sudo
 
-# Verifica k3s
-k3s kubectl get nodes
+# Workstation WSL/macOS (senza nixos-rebuild nativo):
+nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 \
+  --build-host localhost \
+  --use-remote-sudo
+```
+
+> **`--use-remote-sudo`**: serve perché nixos-rebuild via SSH esegue
+> `nix-env --set` e `switch-to-configuration` come utente target, ma entrambi
+> richiedono root per scrivere in `/nix/var/nix/profiles/`. Il flag fa il
+> `sudo` su quei comandi, sfruttando `wheelNeedsPassword = false` di
+> `modules/common.nix` riga 11. Senza di esso, su target non-root, fallisce
+> con `Permission denied` su `/nix/var/nix/profiles/.0_system`.
+
+Adesso partono tutti i moduli dichiarati nel flake (Technitium, k3s, sops-nix,
+rclone-backup timer).
+
+### 4.2 Verifica
+
+```bash
+# SSH come cosimo (sudo nopasswd)
+ssh cosimo@192.168.178.2
+
+# Pool ZFS e persist
+sudo zpool status tank
+sudo zfs list
+ls -la /persist/sops/age/                       # deve contenere keys.txt
+
+# sops-nix ha decifrato i secret? (deve essere popolato)
+sudo ls /run/secrets/                            # k3s/, backup/, ...
+sudo ls /run/secrets/k3s/                        # flux-git-auth, flux-sops-age
+sudo ls /run/secrets/backup/                     # rclone-env
+
+# Servizi host
+sudo systemctl status technitium-dns-server
+sudo systemctl status k3s
+sudo systemctl status rclone-backup.timer        # attivo, prossimo run alle 03:00
+
+# k3s
+sudo k3s kubectl get nodes
 # NAME      STATUS   ROLES                  AGE     VERSION
 # nebula   Ready    control-plane,master   2m      v1.30.x+k3s1
 
-# Verifica CNI (Flannel bundled, pod kube-flannel)
-k3s kubectl get pods -n kube-system
-# Tutti i pod devono essere Running (inclusi flannel, coredns, traefik dopo Flux)
+sudo k3s kubectl get pods -A | head
+# Tutti i pod devono essere Running (coredns, traefik, flux-system, ...)
 
-# Verifica CoreDNS custom (il ConfigMap si chiama "coredns", non "coredns-custom")
-k3s kubectl -n kube-system get configmap coredns
-# Deve esistere con il Corefile che forward a Technitium
+# CoreDNS custom (forward a Technitium)
+sudo k3s kubectl -n kube-system get configmap coredns
+# Deve esistere con il Corefile che forward a 192.168.178.2:53
 
-# Verifica Flux (se hai configurato i secret)
-k3s kubectl -n flux-system get pods
-# Tutti i pod flux-system devono essere Running
-
-k3s flux get kustomizations
+# Flux
+sudo k3s kubectl -n flux-system get pods
+sudo k3s flux get kustomizations
 # Tutte le Kustomization devono essere Ready
 ```
+
+### Troubleshooting rapido post-install
+
+- **`/run/secrets/` vuoto dopo switch** → la chiave age non era in
+  `/persist/sops/age/keys.txt` al boot. Ricontrolla Step 3.1 e rifai
+  `nixos-rebuild switch` (i secret non si decifrano finché la chiave non c'è).
+- **k3s non parte** → `journalctl -u k3s`. Di solito porta 6443 occupata o
+  errore di configurazione. Flannel non richiede bootstrap esterno.
+- **Flux non si connette a GitHub** → verifica la SSH key in
+  `secrets/flux-git-auth.enc.yaml` e che la chiave pubblica sia aggiunta come
+  Deploy Key su GitHub (read-only).
+- **SSH da workstation rifiutato dopo reboot** → il sistema installato ha
+  `PasswordAuthentication = false` e richiede la chiave privata. Verifica che
+  `modules/common.nix` contenga la tua chiave pubblica e che tu ce l'abbia in
+  `~/.ssh/id_ed25519`.
+
+---
 
 ## Step 5 — Configurazione Technitium via web UI
 
@@ -136,7 +250,7 @@ config si fanno via web UI:
 
 ```bash
 # Dalla workstation, tunnel SSH verso la web UI
-ssh -L 5380:127.0.0.1:5380 root@192.168.178.2
+ssh -L 5380:127.0.0.1:5380 cosimo@192.168.178.2
 # Apri browser su http://127.0.0.1:5380
 ```
 
@@ -173,8 +287,13 @@ Per aggiornare NixOS o un pacchetto:
 # Update flake.lock (pin nixpkgs nuovo)
 nix flake update --commit nixpkgs
 
-# Build e applica da workstation
-nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
+# Workstation NixOS — build e applica
+nixos-rebuild switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
+
+# Workstation WSL/macOS
+nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
 ```
 
 Per aggiornare altri Helm chart (traefik, cert-manager):
@@ -187,7 +306,7 @@ Per aggiornare altri Helm chart (traefik, cert-manager):
 
 Per ricostruire da zero:
 
-1. USB NixOS minimal + procedura step 4-5 (Disko + nixos-install)
+1. USB NixOS minimal + procedura Step 1-4
 2. Cifra di nuovo i secret con sops (devi avere la chiave age backuppata!)
 3. Verifica che i backup rclone siano disponibili su R2
 
@@ -216,29 +335,12 @@ systemctl start k3s
 
 ---
 
-## Troubleshooting
+## Troubleshooting reference
 
 ### ZFS non si importa al boot
 
 Verifica la `hostId` in `hosts/nebula/hardware.nix` (deve corrispondere
 all'ID del disco). Da live USB: `zpool import -f tank`.
-
-### k3s non parte
-
-`journalctl -u k3s` — di solito è la porta 6443 occupata o un errore di
-configurazione. Flannel non richiede bootstrap esterno; se i pod kube-flannel
-sono in CrashLoopBackOff verifica i log con `k3s kubectl logs -n kube-system`.
-
-### Flux non si connette a GitHub
-
-Verifica la SSH key in `secrets/flux-git-auth.enc.yaml` e che la chiave pubblica
-sia aggiunta come Deploy Key su GitHub (read-only).
-
-```bash
-# Debug manuale Flux
-k3s kubectl -n flux-system logs deploy/source-controller
-k3s kubectl -n flux-system get gitrepository
-```
 
 ### CoreDNS non delega a Technitium
 

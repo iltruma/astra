@@ -63,7 +63,7 @@ Accesso dalla workstation via SSH tunnel:
 
 ```bash
 # Dalla workstation
-ssh -L 5380:127.0.0.1:5380 root@192.168.178.2
+ssh -L 5380:127.0.0.1:5380 cosimo@192.168.178.2
 # Apri browser su http://127.0.0.1:5380
 ```
 
@@ -173,7 +173,12 @@ aggiornare:
 
 ```bash
 nix flake update --commit nixpkgs
-nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
+# Workstation NixOS:
+nixos-rebuild switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
+# Workstation WSL/macOS:
+nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
 ```
 
 Technitium non richiede migrazioni di state: ogni release mantiene

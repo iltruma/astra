@@ -66,15 +66,20 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 nix flake check
 
 # Applicare modifiche NixOS (da workstation)
-nixos-rebuild switch --flake .#nebula --target-host root@192.168.178.2
+# Workstation NixOS:
+nixos-rebuild switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
+# Workstation WSL/macOS:
+nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
+  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
 
 # Stato k3s
-ssh root@192.168.178.2
-k3s kubectl get nodes
-k3s kubectl get pods -A
+ssh cosimo@192.168.178.2
+sudo k3s kubectl get nodes
+sudo k3s kubectl get pods -A
 
 # Stato Flux
-k3s flux get kustomizations
+sudo k3s flux get kustomizations
 k3s flux get helmreleases -A
 
 # Stato servizi host

@@ -14,7 +14,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # nix run .#nixos-anywhere -- --flake .#nebula root@192.168.178.2
+    # Install:
+    #   nix run github:nix-community/nixos-anywhere -- \
+    #     --flake .#nebula --build-on local \
+    #     --target-host root@192.168.178.2 \
+    #     --extra-files <dir-con-chiave-age>
+    # Vedi docs/00-nixos-installation.md §3 per il bootstrap sops
     nixos-anywhere = {
       url = "github:nix-community/nixos-anywhere";
       inputs.nixpkgs.follows = "nixpkgs";

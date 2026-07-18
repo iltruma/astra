@@ -103,7 +103,7 @@ Se per qualche motivo Flux non parte, bootstrap manuale dalla workstation:
 
 ```bash
 # 1. Recupera kubeconfig
-ssh root@192.168.178.2 'cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config-nebula
+ssh cosimo@192.168.178.2 'sudo cat /etc/rancher/k3s/k3s.yaml' > ~/.kube/config-nebula
 # Modifica server: https://192.168.178.2:6443
 sed -i 's/127.0.0.1/192.168.178.2/' ~/.kube/config-nebula
 
