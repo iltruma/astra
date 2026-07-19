@@ -160,7 +160,7 @@ astra/
 | # | Fase                            | Stato  | Sprint chiave                                |
 |---|---------------------------------|--------|----------------------------------------------|
 | 1 | Backbone                        | 🟢     | S0 Technitium DNS, S2 k3s+Flannel, S3 cert-manager, S4 Flux CD, S5 SOPS + age, S6 backup (in pausa) |
-| 2 | Accesso & osservabilità         | 🟡     | S10 Uptime Kuma, S15b Tailscale (accesso remoto); S11 Homepage, S12 Cloudflare Tunnel rimosso; S12b Beszel 🔴 |
+| 2 | Accesso & osservabilità         | 🟢     | S10 Uptime Kuma, S11 Homepage, S12b Beszel, S15b Tailscale (accesso remoto); S12 Cloudflare Tunnel rimosso |
 | 3 | App tue                         | 🔴     | S13 — da pianificare                          |
 | 4 | Media                           | 🔴     | S15 Jellyfin, S16 download stack, S17 Jellyseerr (storage: ZFS `tank/media` hostPath) |
 | 5 | Rete avanzata (VLAN)            | 🔴     | S18 — richiede switch managed                |

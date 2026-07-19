@@ -11,7 +11,7 @@ Se è la prima volta che tocchi questo repo:
 1. [`00-nixos-installation.md`](00-nixos-installation.md) — installare NixOS baremetal
 2. [`01-network.md`](01-network.md) — bridge br0, firewall, DNS
 3. [`02-storage.md`](02-storage.md) — layout disco ZFS
-4. [`03-backup.md`](03-backup.md) — backup rclone → Cloudflare R2
+4. [`03-backup.md`](03-backup.md) — backup rclone → Cloudflare R2 (in pausa)
 5. [`04-dns-technitium.md`](04-dns-technitium.md) — Technitium DNS
 6. [`05-tls.md`](05-tls.md) — Let's Encrypt + Cloudflare
 7. [`06-secrets-sops.md`](06-secrets-sops.md) — SOPS + age
@@ -28,7 +28,7 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 | 00  | Installazione NixOS                | [`00-nixos-installation.md`](00-nixos-installation.md) |
 | 01  | Rete (bridge, firewall, DNS)       | [`01-network.md`](01-network.md)                 |
 | 02  | Storage (ZFS, dataset, snapshot)   | [`02-storage.md`](02-storage.md)                 |
-| 03  | Backup off-site (rclone → R2)      | [`03-backup.md`](03-backup.md)                   |
+| 03  | Backup off-site (rclone → R2) — in pausa | [`03-backup.md`](03-backup.md)                   |
 | 04  | DNS Technitium (zona, split-horizon) | [`04-dns-technitium.md`](04-dns-technitium.md) |
 | 05  | TLS (cert-manager + Let's Encrypt) | [`05-tls.md`](05-tls.md)                         |
 | 06  | Secrets (SOPS + age, host + k8s)   | [`06-secrets-sops.md`](06-secrets-sops.md)       |
@@ -41,7 +41,7 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 
 - **Fase 0 — Migrazione NixOS** (completata): [00](00-nixos-installation.md)
 - **Fase 1 — Backbone** (Kubernetes + DNS + backup): [01](01-network.md) · [04](04-dns-technitium.md) · [05](05-tls.md) · [06](06-secrets-sops.md) · [07](07-gitops.md)
-- **Fase 2 — Accesso & osservabilità** (Uptime Kuma attivo, monitoring in corso): [08](08-monitoring.md)
+- **Fase 2 — Accesso & osservabilità** (Uptime Kuma, Beszel, Tailscale attivi): [08](08-monitoring.md) + [roadmap S15b](roadmap.md)
 - **Fase 3 — App tue**: nessun doc ancora
 - **Fase 4 — Media**: [02](02-storage.md) (storage prerequisito)
 - **Fase 5 — Rete avanzata (VLAN)**: [01](01-network.md) (Piano A firewall)

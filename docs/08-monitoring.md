@@ -107,7 +107,7 @@ curl -v https://beszel.lab.paroparo.it
 
 | Decisione | Stato | Note |
 |-----------|-------|------|
-| D7 — Beszel monitoring  | 🟡 parziale | Hub in k3s + agent host NixOS attivi; manca solo alerting |
+| D7 — Beszel monitoring  | 🟢 applicato | Hub in k3s + agent host NixOS attivi; manca solo alerting (D11) |
 | D11 — Alerting ntfy | 🔴 proposto | Da configurare dopo Beszel agent host |
 
 ## Alternative considerate (per memoria)

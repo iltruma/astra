@@ -274,7 +274,7 @@ Per vedere cosa è stato decifrato (debug):
 # Lista secret host decifrati
 ls -la /run/secrets/
 ls -la /run/secrets/k3s/
-ls -la /run/secrets/backup/
+# ls -la /run/secrets/backup/   # in pausa dal 2026-07-19
 
 # Verifica che i secret k8s siano decifrati da Flux
 k3s kubectl -n myns get secret my-secret -o jsonpath='{.data.password}' | base64 -d
