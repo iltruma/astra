@@ -10,6 +10,7 @@
     ./k3s.nix
     ./technitium.nix
     ./beszel-agent.nix
+    ./tailscale.nix
     ../../modules/common.nix
   ];
 

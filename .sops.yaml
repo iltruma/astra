@@ -25,4 +25,4 @@ creation_rules:
     # Per secrets/ rclone-env.enc.yaml il formato è dotenv (KEY=value)
     # Per secrets.yaml (sops-nix default) il formato è YAML generico
     # Match: k3s.*, backup.*, env vars uppercase, k8s Secret data/stringData
-    encrypted_regex: '^(stringData|data|k3s|backup|[A-Z_]+)$'
+    encrypted_regex: '^(stringData|data|k3s|backup|tailscale|[A-Z_]+)$'
