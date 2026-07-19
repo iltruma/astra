@@ -16,7 +16,7 @@ alternative scartate e rischio a lungo termine. Ogni decisione ha uno stato:
 | D2   | CoreDNS bundled k3s + ConfigMap custom | 🟢 applicato | Delega split-horizon a Technitium |
 | D3   | Rimuovere NVMe fisicamente           | 🟢 applicato | Single disk /dev/sda |
 | D4   | ArgoCD → Flux CD v2                  | 🟢 applicato | Native SOPS, niente plugin esterni |
-| D5   | Kubelet tuning k3s (low-RAM)         | 🟢 applicato | In `modules/k3s.nix` → `extraFlags` |
+| D5   | Kubelet tuning k3s (low-RAM)         | 🟢 applicato | In `hosts/nebula/k3s.nix` → `extraFlags` |
 | D6   | Sealed Secrets → SOPS + age          | 🟢 applicato | Unificato host (sops-nix) + k8s (Flux SOPS) |
 | D7   | Beszel monitoring                    | 🟡 parziale | Hub in k3s, agent su host NixOS (opzionale) |
 | D8   | RAM upgrade 16 → 32 GB               | 🟡 parziale | Prerequisito hardware, non ancora fatto |
@@ -75,25 +75,43 @@ k3s applica automaticamente i manifest con prefisso `00-` PRIMA del suo
 CoreDNS bundled. Il ConfigMap deve avere `name: coredns` (nome esatto che
 k3s sovrascrive) per fare override del Corefile di default.
 
-Config in `modules/k3s.nix`:
+Config in `hosts/nebula/k3s.nix`:
 ```nix
-environment.etc."k3s/coredns-custom.yaml".text = ''
-  apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: coredns
-    namespace: kube-system
-  data:
-    Corefile: |
-      .:53 { ... forward . 192.168.178.2:53 ... }
-      lab.paroparo.it:53 { ... forward . 192.168.178.2:53 ... }
-'';
+manifests."coredns-custom" = {
+  content = {
+    apiVersion = "v1";
+    kind = "ConfigMap";
+    metadata = {
+      name = "coredns";
+      namespace = "kube-system";
+    };
+    data.Corefile = ''
+      .:53 {
+          errors
+          health
+          ready
+          kubernetes cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+          }
+          forward . 192.168.178.2:53
+          cache 30
+          loop
+          reload
+          loadbalance
+      }
+      lab.paroparo.it:53 {
+          errors
+          cache 30
+          forward . 192.168.178.2:53
+      }
+    '';
+  };
+};
 ```
 
-Symlink in `systemd.tmpfiles.rules`:
-```nix
-"L+ /var/lib/rancher/k3s/server/manifests/00-coredns-custom.yaml - - - - /etc/k3s/coredns-custom.yaml"
-```
+k3s applica il manifest al boot (prefisso `00-` rispetto al CoreDNS bundled,
+che lo riconosce e usa il Corefile custom).
 
 ### Vantaggi
 
@@ -164,20 +182,24 @@ Nessuna web UI nativa. Per debug: `flux get all`, `kubectl describe kustomizatio
 
 k3s di default non è ottimizzato per single-node con RAM limitata.
 
-### Scelta: `extraFlags` in `modules/k3s.nix`
+### Scelta: `extraFlags` in `hosts/nebula/k3s.nix`
 
 ```nix
 services.k3s.extraFlags = toString [
   "--disable=traefik"              # Traefik via Flux
-  "--disable=servicelb"            # non serve
-  "--disable=local-storage"        # ZFS fornisce storage
   "--disable=metrics-server"       # Beszel copre monitoring
   "--write-kubeconfig-mode=0644"   # kubeconfig leggibile da utente
 ];
 ```
 
-> Nota: `--flannel-backend=none` e `--disable-network-policy` sono stati
-> rimossi insieme a Cilium (D1). Flannel è attivo di default.
+> Note:
+> - `--disable=servicelb` rimosso: klipper-lb è necessario per esporre Traefik
+>   come `Service type=LoadBalancer` su 80/443 (vedi
+>   `k8s/infra/traefik/install/helmrelease.yaml`).
+> - `--disable=local-storage` rimosso: il PVC `local-path` è usato dalle app
+>   (uptime-kuma, beszel-hub) per il `local-path` storage class.
+> - `--flannel-backend=none` e `--disable-network-policy` sono stati
+>   rimossi insieme a Cilium (D1). Flannel è attivo di default.
 
 ### Rischio a lungo termine
 
@@ -280,14 +302,18 @@ Pi-hole v6 non supporta nessuno di questi nativamente.
 
 ### Scelta: Technitium DNS (modulo NixOS nativo)
 
-`pkgs.technitium-dns-server` v15.2.0 in nixpkgs con modulo
+`pkgs.technitium-dns-server` 15.x da `nixpkgs-unstable` (vedi
+`flake.nix` → `specialArgs.unstable`) con modulo
 `services.technitium-dns-server`:
 - systemd hardened (`DynamicUser`, `NoNewPrivileges`, `ProtectSystem=strict`)
 - `StateDirectory` gestito automaticamente
-- Web UI su `127.0.0.1:5380` (accesso via SSH tunnel)
+- Web UI su `0.0.0.0:5380` (raggiungibile solo via loopback o Traefik reverse
+  proxy — vedi firewall custom in `hosts/nebula/technitium.nix`)
 - Niente container/Docker, gira come servizio host
+- Recursion + DNSSEC validation attivi, blocklist HaGeZi + Steven Black + AdGuard
+  (vedi `hosts/nebula/dns-blocklists.txt`)
 
-Vedi [04-dns-technitium.md](04-dns-technitium.md) per la configurazione.
+Vedi [04-dns-technitium.md](04-dns-technitium.md) per la configurazione completa.
 
 ### Rischio a lungo termine
 
@@ -309,7 +335,7 @@ possono ricostruire da Git:
 
 - **Cloudflare R2**: S3-compatible, free tier 10 GB, **zero egress fees**
 - **rclone**: client universale, supporta S3 + cifratura client-side
-- **systemd timer NixOS** (`modules/backup.nix`): esecuzione notturna alle 03:00
+- **systemd timer NixOS** (`hosts/nebula/backup.nix`): esecuzione notturna alle 03:00
 
 ```nix
 systemd.services.rclone-backup = {

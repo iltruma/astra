@@ -38,23 +38,27 @@ per metriche host: CPU, RAM, disco, I/O, rete, temperatura.
 ### Deploy
 
 In [`k8s/apps/beszel/`](../k8s/apps/beszel/):
-- `namespace.yaml`
-- `hub-deployment.yaml` — Beszel hub
-- `hub-service.yaml`
-- `hub-pvc.yaml` — DB hub
+- `namespace.yaml` — namespace `beszel` con label `pod-security.kubernetes.io/enforce: privileged`
+- `hub-deployment.yaml` — Beszel hub (henrygd/beszel:0.18.7)
+- `hub-service.yaml` — ClusterIP
+- `hub-pvc.yaml` — DB hub (1 Gi, storage class `local-path`)
 - `hub-ingress.yaml` — `beszel.lab.paroparo.it`
-- `agent-daemonset.yaml` — agent in ogni nodo k8s (per ora solo nebula)
+
+> **Stato attuale**: solo l'hub è deployato. Non c'è ancora un agent
+> `DaemonSet` nel cluster (vedi sotto per la limitazione K8s).
 
 ### Limitazione: agent su host NixOS
 
-Beszel non ha supporto K8s nativo. L'agent nel DaemonSet gira come pod
-`privileged` con `hostPath` su `/proc`, `/sys`, `/var/lib/rancher/k3s`. Metriche
-host OK, metriche per Pod/Deployment come oggetti K8s no.
+Beszel non ha supporto K8s nativo. L'agent ideale sarebbe un pod con
+`privileged` + `hostPath` su `/proc`, `/sys`, `/var/lib/rancher/k3s`, ma
+richiede la label namespace `pod-security.kubernetes.io/enforce: privileged`
+(già impostata). Metriche host OK, metriche per Pod/Deployment come oggetti
+K8s no.
 
 Per avere un agent sul **host NixOS** (fuori da k3s), serve installarlo via Nix:
 
 ```nix
-# modules/beszel-agent.nix (da creare)
+# hosts/nebula/beszel-agent.nix (da creare)
 services.beszel-agent = {
   enable = true;
   host = "beszel.lab.paroparo.it";
@@ -63,8 +67,9 @@ services.beszel-agent = {
 };
 ```
 
-> **Stato**: agent host non ancora implementato. Per ora l'agent nel DaemonSet
-> fornisce le metriche host base.
+> **Stato**: agent host non ancora implementato. Per ora nessun agent
+> fornisce metriche (il DaemonSet in K8s non è deployato). Quando l'agent
+> host NixOS sarà pronto, popolera il hub con CPU/RAM/disco/rete di `nebula`.
 
 ## Notifiche
 

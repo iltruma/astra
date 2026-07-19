@@ -258,9 +258,16 @@ Configurazione minima:
 - Crea zona autoritativa `lab.paroparo.it`
 - Aggiungi record wildcard `*.lab.paroparo.it → 192.168.178.2`
 - Configura upstream DoH Cloudflare
-- (Opzionale) Blocklist Steven Black + OISD
+- Abilita recursion + DNSSEC validation
+- Blocklist: incolla le URL da `hosts/nebula/dns-blocklists.txt` (HaGeZi Pro +
+  Steven Black + AdGuard DNS filter)
 
-Vedi [04-dns-technitium.md](04-dns-technitium.md) per dettagli.
+Il file [`hosts/nebula/dns-zone.lab.paroparo.it`](../hosts/nebula/dns-zone.lab.paroparo.it)
+contiene la zona BIND completa (record espliciti, CAA, SPF) — importabile
+via UI per non ricreare a mano.
+
+Vedi [04-dns-technitium.md](04-dns-technitium.md) per dettagli e la checklist
+completa (anche nell'header del file [`hosts/nebula/technitium.nix`](../hosts/nebula/technitium.nix)).
 
 ## Step 6 — Verifica end-to-end
 

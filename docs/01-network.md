@@ -24,23 +24,21 @@ Internet
 > esistono più VM/LXC con IP separati. I servizi k3s rispondono su `.2:6443`,
 > Technitium su `.2:53`, Traefik su `.2:80/443`.
 
-## Bridge br0
+## Interfaccia di rete
 
 Configurazione in [`hosts/nebula/networking.nix`](../hosts/nebula/networking.nix):
 
 ```nix
-networking.bridges.br0.interfaces = [ "enp1s0" ];
-networking.interfaces.br0.ipv4.addresses = [
+networking.interfaces.enp1s0.ipv4.addresses = [
   { address = "192.168.178.2"; prefixLength = 24; }
 ];
 ```
 
-Topologia: `enp1s0` (fisica) → `br0` (bridge) → IP host. Il bridge è
-trasparente, equivalente a un cavo diretto. Modello analogo al `vmbr0` di
-Proxmox, ma non c'è più Proxmox.
-
-Per ora `br0` ha solo l'host come membro. Se in futuro aggiungi container o
-VM, basta attaccare la loro interfaccia a `br0` e avranno IP nella LAN.
+Topologia: `enp1s0` (fisica) → IP host diretto. Niente bridge in questo setup
+(la gestione bridge era utile con Proxmox per le VM; qui non serve).
+Se in futuro aggiungi container nativi NixOS (`nixos-container`) o VM, si
+può aggiungere `networking.bridges.br0.interfaces = [ "enp1s0" ]` e spostare
+l'IP su `br0`.
 
 ## IP statici
 
@@ -104,7 +102,8 @@ Configurazione Technitium (via web UI dopo install, vedi
   `*.lab.paroparo.it → 192.168.178.2`
 - **Split horizon**: per `lab.paroparo.it`, risponde dalla zona locale; per
   tutto il resto, delega agli upstream DoH (Cloudflare 1.1.1.1, Quad9 9.9.9.9)
-- **Blocklist**: Steven Black + OISD (opzionale)
+- **Blocklist**: HaGeZi Pro + Steven Black + AdGuard DNS filter
+  (vedi `hosts/nebula/dns-blocklists.txt`)
 
 Per fare puntare i client a Technitium:
 1. Configurare il router Fritz!Box per distribuire `192.168.178.2` come DNS
@@ -114,7 +113,8 @@ Per fare puntare i client a Technitium:
 ## DNS interno per pod k8s
 
 I pod k8s usano CoreDNS bundled di k3s, configurato per delegare a Technitium
-per la zona `lab.paroparo.it`. Configurazione in `modules/k3s.nix`:
+per la zona `lab.paroparo.it`. Configurazione in
+[`hosts/nebula/k3s.nix`](../hosts/nebula/k3s.nix):
 
 ```nix
 environment.etc."k3s/coredns-custom.yaml".text = ''
@@ -147,8 +147,8 @@ dig @192.168.178.2 uptime.lab.paroparo.it # wildcard → 192.168.178.2
 curl -v https://uptime.lab.paroparo.it   # Traefik + cert-manager
 
 # Da nebula stesso
-ip link show br0                          # bridge up
-ip addr show br0                          # IP 192.168.178.2
+ip link show enp1s0                       # interfaccia fisica up
+ip addr show enp1s0                       # IP 192.168.178.2
 ss -tlnp | grep -E ':(22|53|80|443|6443)' # porte in ascolto
 ```
 

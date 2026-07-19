@@ -1,7 +1,7 @@
 # Backup / Disaster Recovery
 
 Strategia di backup off-site e procedura di ricostruzione. Configurato in
-[`modules/backup.nix`](../modules/backup.nix).
+[`hosts/nebula/backup.nix`](../hosts/nebula/backup.nix).
 
 ## Strategia
 
@@ -18,7 +18,7 @@ su **Cloudflare R2** via `rclone` con systemd timer notturno (ore 03:00).
 
 ## Cosa viene backuppato su R2
 
-Configurato in [`modules/backup.nix`](../modules/backup.nix):
+Configurato in [`hosts/nebula/backup.nix`](../hosts/nebula/backup.nix):
 
 | Sorgente                      | Cosa contiene                              | Note |
 |-------------------------------|--------------------------------------------|------|
@@ -60,7 +60,7 @@ Procedura:
 ## Esecuzione backup
 
 Il `systemd.timers.rclone-backup` è attivo e gira ogni notte alle 03:00
-(configurable in `modules/backup.nix`). Esecuzione manuale:
+(configurabile in `hosts/nebula/backup.nix`). Esecuzione manuale:
 
 ```bash
 # Esegui il backup subito (senza aspettare il timer)

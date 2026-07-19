@@ -5,7 +5,7 @@ Architettura del cluster k3s e gestione GitOps con Flux CD v2.
 ## k3s su NixOS
 
 `k3s` gira come **servizio host** sul NixOS baremetal (non in VM/container
-separato). Configurazione in [`modules/k3s.nix`](../modules/k3s.nix).
+separato). Configurazione in [`hosts/nebula/k3s.nix`](../hosts/nebula/k3s.nix).
 
 ### CNI: Flannel (bundled)
 
@@ -22,9 +22,7 @@ stabile.
 
 ```nix
 services.k3s.extraFlags = toString [
-  "--disable=traefik"              # Traefik via Flux
-  "--disable=servicelb"            # non serve su single-node
-  "--disable=local-storage"        # ZFS fornisce storage locale
+  "--disable=traefik"              # Traefik via Flux (klipper-lb espone 80/443)
   "--disable=metrics-server"       # Beszel copre monitoring
   "--write-kubeconfig-mode=0644"   # kubeconfig leggibile da utente
 ];
@@ -33,11 +31,11 @@ services.k3s.extraFlags = toString [
 | Servizio bundled | Stato | Note |
 |------------------|-------|------|
 | Flannel          | ✅ attivo | CNI di default k3s |
-| Traefik          | ❌ disabilitato | HelmRelease Flux |
+| Traefik bundled  | ❌ disabilitato | HelmRelease Flux (chart 41.x) |
 | CoreDNS          | ✅ attivo + override | Custom ConfigMap → Technitium |
 | kube-proxy       | ✅ attivo | Standard k3s |
-| servicelb        | ❌ disabilitato | single-node |
-| local-storage    | ❌ disabilitato | ZFS dataset `tank/volumes` |
+| servicelb (klipper-lb) | ✅ attivo | Espone 80/443 sull'IP del nodo (192.168.178.2) → forwarda a Traefik 8000/8443. Service `traefik` type=LoadBalancer si appoggia qui. |
+| local-storage    | ✅ attivo (default) | ZFS dataset `tank/volumes`, PVC usano `local-path` |
 | metrics-server   | ❌ disabilitato | Beszel (esterno k3s) |
 
 ## Flux CD v2
@@ -48,33 +46,52 @@ Tutto il cluster è gestito da **Flux** in GitOps.
 
 ```
 k8s/
-├── clusters/dyson/                      ← Kustomization radice
-│   ├── infrastructure.yaml            → k8s/infra/ (cert-manager, traefik)
-│   └── apps.yaml                      → k8s/apps/ (uptime-kuma, beszel, ecc.)
+├── clusters/dyson/                      ← Kustomization radice (5 file)
+│   ├── cert-manager.yaml             → k8s/infra/cert-manager/install
+│   ├── infrastructure.yaml           → k8s/infra/cert-manager/config (dependsOn cert-manager)
+│   ├── traefik.yaml                  → k8s/infra/traefik/install
+│   ├── traefik-config.yaml          → k8s/infra/traefik/config (dependsOn traefik)
+│   └── apps.yaml                     → k8s/apps/ (dependsOn infrastructure)
 │
-├── infra/                             ← HelmRelease di infrastruttura
-│   ├── cert-manager/                  → cert-manager + ClusterIssuer + wildcard cert
-│   └── traefik/                       → HelmRelease Traefik + TLSStore
+├── infra/                             ← HelmRelease di infrastruttura (split install/config)
+│   ├── cert-manager/
+│   │   ├── install/                  → namespace + HelmRelease (controller layer)
+│   │   └── config/                   → ClusterIssuer + Certificate + secret (depends on CRD)
+│   └── traefik/
+│       ├── install/                  → HelmRelease (controller layer)
+│       └── config/                   → TLSStore (depends on traefik CRD)
 │
 └── apps/                              ← Servizi applicativi
-    ├── beszel/                        → monitoring leggero
+    ├── beszel/                        → monitoring hub
     ├── homepage/                      → dashboard
     ├── infra-proxy/                   → reverse proxy per host fisici
+    ├── technitium/                    → expose Technitium web UI via Traefik
     └── uptime-kuma/                   → status page
 ```
 
-### Kustomization
+### Kustomization (5 Kustomization, ordine garantito da `dependsOn`)
 
-[`k8s/clusters/dyson/infrastructure.yaml`](../k8s/clusters/dyson/infrastructure.yaml):
+Il pattern install/config separa l'install del controller (HelmRelease + CRD)
+dalle risorse che dipendono dalle CRD. Flux garantisce l'ordine:
+
+```
+cert-manager (controller)  →  infrastructure (config cert-manager)
+                                ↓
+traefik (controller)        →  traefik-config (config traefik)
+                                ↓
+apps (tutto k8s/apps/, dependsOn infrastructure)
+```
+
+Esempio — [`k8s/clusters/dyson/cert-manager.yaml`](../k8s/clusters/dyson/cert-manager.yaml):
 
 ```yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: infrastructure
+  name: cert-manager
   namespace: flux-system
 spec:
-  interval: 1h
+  interval: 1m
   retryInterval: 5m
   timeout: 10m
   prune: true
@@ -82,15 +99,25 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./k8s/infra
-  decryption:
-    provider: sops
-    secretRef:
-      name: sops-age
+  path: ./k8s/infra/cert-manager/install
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: cert-manager
+      namespace: cert-manager
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: clusterissuers.cert-manager.io
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      name: certificates.cert-manager.io
 ```
 
-[`k8s/clusters/dyson/apps.yaml`](../k8s/clusters/dyson/apps.yaml): identica ma
-path `./k8s/apps` e `dependsOn: infrastructure`.
+[`k8s/clusters/dyson/infrastructure.yaml`](../k8s/clusters/dyson/infrastructure.yaml):
+identica ma `path: ./k8s/infra/cert-manager/config` e
+`dependsOn: [{ name: cert-manager }]`. Stesso pattern per `traefik` e
+`traefik-config`. `apps.yaml` ha `path: ./k8s/apps` e
+`dependsOn: [{ name: infrastructure }]`.
 
 ### Bootstrap (una tantum)
 

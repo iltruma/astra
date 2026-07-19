@@ -69,7 +69,7 @@ DNS come servizio NixOS nativo.
 - **IaC**: flake NixOS (Nix language, unica fonte di verità)
 - **Config Management**: moduli NixOS + nixos-rebuild
 - **Container Orchestration**: k3s (single-node, servizio host)
-- **CNI**: Cilium 1.18.x (helmfile bootstrap + HelmRelease Flux)
+- **CNI**: Flannel (bundled k3s, default)
 - **CI/CD**: GitHub Actions + Flux CD v2 (GitOps)
 - **Secrets**: SOPS + age (sops-nix per host, Flux SOPS per k8s)
 - **DNS**: Technitium DNS (modulo NixOS nativo)
@@ -80,12 +80,15 @@ DNS come servizio NixOS nativo.
 ## Struttura
 
 ```
-flake.nix         - Entry point NixOS (pin nixpkgs, sops-nix, disko)
-hosts/nebula/   - Config specifica del server (disko, hardware, networking)
-modules/          - Moduli NixOS riusabili (common, technitium, k3s, backup)
-secrets/          - Secret host cifrati con SOPS (*.enc.yaml)
-k8s/              - Manifesti GitOps (Flux) — invariato dalla migrazione
-docs/             - Documentazione step-by-step (roadmap, decisioni, migration)
+flake.nix          - Entry point NixOS (pin nixpkgs, nixpkgs-unstable, sops-nix, disko)
+hosts/nebula/      - Config specifica del server: disko, hardware, networking,
+                     impermanence, k3s, technitium, backup (servizi host)
+hosts/taiga/       - Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
+hosts/installer/   - ISO NixOS headless per nixos-anywhere
+modules/           - Moduli NixOS riusabili: common (utenti, SSH, sops), keys
+secrets/           - Secret host cifrati con SOPS (*.enc.yaml)
+k8s/               - Manifesti GitOps (Flux) — invariato dalla migrazione
+docs/              - Documentazione step-by-step (roadmap, decisioni, migration)
 .github/workflows/ - CI (nix flake check, kubeconform, gitleaks)
 ```
 

@@ -151,16 +151,17 @@ I secret sono montati in `/run/secrets/k3s/...` e symlinkati in
 (il manifest `flux-namespace` che crea il namespace `flux-system` è applicato
 direttamente dal modulo k3s, non via symlink).
 
-### Configurazione in `modules/backup.nix`
+### Configurazione in `hosts/nebula/backup.nix`
 
 ```nix
 sops.secrets."backup/rclone-env" = {
-  sopsFile = ../secrets/rclone-env.enc.yaml;
-  format = "dotenv";
+  sopsFile = ../../secrets/rclone-env.enc.yaml;
+  format = "yaml";
 };
 ```
 
-Montato in `/run/secrets/backup/rclone-env` (formato dotenv: `KEY=value`).
+Montato in `/run/secrets/backup/rclone-env` e consumato da systemd
+`rclone-backup.service` via `EnvironmentFile = ...path`.
 
 ## Secret per k8s (`k8s/**/*.enc.yaml`)
 

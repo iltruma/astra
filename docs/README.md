@@ -39,7 +39,7 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 
 ## Per fase (roadmap)
 
-- **Fase 0 — Migrazione NixOS** (completata, validazione in corso): [00](00-nixos-installation.md)
+- **Fase 0 — Migrazione NixOS** (completata): [00](00-nixos-installation.md)
 - **Fase 1 — Backbone** (Kubernetes + DNS + backup): [01](01-network.md) · [04](04-dns-technitium.md) · [05](05-tls.md) · [06](06-secrets-sops.md) · [07](07-gitops.md)
 - **Fase 2 — Accesso & osservabilità** (Uptime Kuma attivo, monitoring in corso): [08](08-monitoring.md)
 - **Fase 3 — App tue**: nessun doc ancora

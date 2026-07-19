@@ -28,17 +28,17 @@ si passa al successivo. Le dipendenze determinano l'ordine.
 
 ---
 
-## Fase 0 — Migrazione NixOS (in corso)
+## Fase 0 — Migrazione NixOS (completata)
 
 | Sprint | Servizio | Stato | Note |
 |--------|----------|-------|------|
 | N0     | Flake skeleton + host config | 🟢 | `flake.nix`, `hosts/nebula/`, `modules/common.nix` |
-| N1     | Servizi host (Technitium, k3s, backup) | 🟢 | `modules/{technitium,k3s,backup}.nix` |
+| N1     | Servizi host (Technitium, k3s, backup) | 🟢 | `hosts/nebula/{technitium,k3s,backup}.nix` |
 | N2     | ~~Cilium HelmRelease Flux~~ | ❌ rimosso | `k8s/infra/cilium/` rimosso; CNI è Flannel (vedi D1) |
 | N3     | Docs + CI | 🟢 | Doc 00-08 + CI con `nix flake check` |
-| N4     | Install fisico + cutover | 🔴 | Seguire [00-nixos-installation.md](00-nixos-installation.md) |
-| N5     | Configurazione Technitium (zona, blocklist) | 🔴 | Via web UI dopo install |
-| N6     | Validazione end-to-end | 🔴 | kubectl get nodes, flux get all, dig lab.paroparo.it |
+| N4     | Install fisico + cutover | 🟢 | `nixos-anywhere` (vedi [00-nixos-installation.md](00-nixos-installation.md)) |
+| N5     | Configurazione Technitium (zona, blocklist, recursive, DNSSEC) | 🟢 | Checklist completa nell'header di `hosts/nebula/technitium.nix`; zona BIND in `hosts/nebula/dns-zone.lab.paroparo.it`; blocklist in `hosts/nebula/dns-blocklists.txt` |
+| N6     | Validazione end-to-end | 🟢 | k3s + Flannel + Flux + cert-manager + Traefik OK, tutti i servizi `*.lab.paroparo.it` raggiungibili in HTTPS |
 
 **DoD Fase 0**:
 - Nebula fa boot da NixOS senza USB
@@ -67,9 +67,15 @@ L'ossatura della fleet. Va completata in ordine perché ogni pezzo sblocca i suc
 
 **S0 — Technitium DNS** · doc: [04-dns-technitium.md](04-dns-technitium.md)
 - DNS ricorsivo + blocklist per tutta la rete, split-horizon per `lab.paroparo.it`.
-- Servizio NixOS nativo (modulo `services.technitium-dns-server` v15.2.0+); zona
-  `lab.paroparo.it` con wildcard `*.lab.paroparo.it → 192.168.178.2`; upstream DoH.
-- DoD: `systemctl status technitium-dns-server` active; zona configurata via web UI; blocklist attive; `dig @192.168.178.2 lab.paroparo.it` risponde.
+- Servizio NixOS nativo (modulo `services.technitium-dns-server`, pacchetto da
+  `nixpkgs-unstable` 15.x via `specialArgs.unstable`); zona `lab.paroparo.it`
+  con wildcard `*.lab.paroparo.it → 192.168.178.2`; upstream DoH (Cloudflare + Quad9);
+  recursive mode + DNSSEC validation attivi; blocklist HaGeZi Pro + Steven Black +
+  AdGuard DNS filter.
+- DoD: `systemctl status technitium-dns-server` active; zona configurata via
+  web UI; blocklist attive; `dig @192.168.178.2 lab.paroparo.it` risponde;
+  `dig @192.168.178.2 doubleclick.net` → NXDOMAIN; `dig +dnssec example.com`
+  mostra bit `ad`; web UI raggiungibile via Traefik su `https://dns.lab.paroparo.it`.
 
 **S1 — TLS: strategia Let's Encrypt** · doc: [05-tls.md](05-tls.md)
 - Niente CA privata: certificati pubblici Let's Encrypt via challenge DNS-01 su
@@ -111,7 +117,7 @@ L'ossatura della fleet. Va completata in ordine perché ogni pezzo sblocca i suc
 - Strategia GitOps-first: il cluster è ricostruibile da Git in ~2-3 ore
   (nixos-install + Flux sync). I dati applicativi vengono sincronizzati
   su **Cloudflare R2** via `rclone` con systemd timer notturno
-  (`modules/backup.nix`). Retention 7 giorni.
+  (`hosts/nebula/backup.nix`). Retention 7 giorni.
 - DoD: `rclone ls r2:nebula-backup/` mostra file; `journalctl -u rclone-backup`
   pulito; la strategia di restore da zero è documentata in [03-backup.md](03-backup.md).
 
@@ -303,9 +309,12 @@ raggiungibili da VLAN 20 su :443, non su :22.
 
 
 ```
-flake.nix         Entry point NixOS (pin nixpkgs, sops-nix, disko)
-hosts/nebula/    Config host: disko (ZFS), hardware, networking, default
-modules/          Moduli NixOS: common, technitium, k3s, backup
+flake.nix         Entry point NixOS (pin nixpkgs, nixpkgs-unstable, sops-nix, disko)
+hosts/nebula/    Config host: disko (ZFS), hardware, networking, default,
+                 impermanence, k3s, technitium, backup
+hosts/taiga/      Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
+hosts/installer/  ISO NixOS headless per nixos-anywhere
+modules/          Moduli NixOS: common, keys
 secrets/          *.enc.yaml cifrati con SOPS + age (sops-nix)
 k8s/              Manifesti GitOps (Flux): clusters/dyson/, infra/, apps/
 docs/             Guide operative: install, network, storage, dns, tls, secrets, gitops

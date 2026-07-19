@@ -93,41 +93,45 @@ Per il partizionamento ZFS, dataset, layout storage e motivazioni vedi
 
 ```
 astra/
-├── flake.nix                    Entry point NixOS (pin nixpkgs, sops-nix, disko)
+├── flake.nix                    Entry point NixOS (pin nixpkgs, nixpkgs-unstable, sops-nix, disko)
 ├── flake.lock                   ← tracciato (pin inputs)
 ├── hosts/
-│   ├── nebula/             Config specifica del server Dell Optiplex 3050
-│   ├── taiga/               Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
-│   └── installer/           ISO NixOS headless per nixos-anywhere
-│       ├── default.nix          hostName, locale, nix settings, aggrega tutto
-│       ├── hardware.nix         ZFS, kernel modules, bootloader, hostId
-│       ├── networking.nix       bridge br0, firewall, IP statico
-│       └── disko.nix            partizionamento ZFS dichiarativo
+│   ├── nebula/                  Config specifica del server Dell Optiplex 3050
+│   │   ├── default.nix          hostName, locale, nix settings, aggrega tutto
+│   │   ├── hardware.nix         ZFS, kernel modules, bootloader, hostId
+│   │   ├── networking.nix       IP statico, firewall, nameservers
+│   │   ├── disko.nix            partizionamento ZFS dichiarativo
+│   │   ├── impermanence.nix     persistenza /persist
+│   │   ├── k3s.nix              k3s server + Flannel (bundled), CoreDNS custom, Flux secrets bootstrap
+│   │   ├── technitium.nix       servizio DNS (nixpkgs-unstable)
+│   │   ├── backup.nix           systemd timer rclone → R2
+│   │   ├── dns-zone.lab.paroparo.it  zona BIND versionata in Git
+│   │   └── dns-blocklists.txt   blocklist Technitium (HaGeZi, Steven Black, AdGuard)
+│   ├── taiga/                   Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
+│   └── installer/               ISO NixOS headless per nixos-anywhere
+│       └── default.nix          SSH, IP statico, chiave workstation
 ├── modules/                     Moduli NixOS riusabili
-│   ├── default.nix              aggregatore
 │   ├── common.nix               utenti, SSH, sops-nix config, pacchetti base
-│   ├── technitium.nix           servizio DNS (nixpkgs nativo)
-│   ├── k3s.nix                  k3s server + Flannel (bundled), CoreDNS custom, Flux secrets bootstrap
-│   └── backup.nix               systemd timer rclone → R2
+│   └── keys.nix                 chiavi SSH pubbliche autorizzate
 ├── secrets/                     Secret host cifrati con SOPS + age
-│   ├── secrets.yaml             aggregato (documentazione)
 │   ├── flux-git-auth.enc.yaml   SSH key per Flux pull
 │   ├── flux-sops-age.enc.yaml   chiave age per decifrare k8s/*.enc.yaml
-│   └── rclone-env.enc.yaml      credenziali R2 per backup
+│   ├── rclone-env.enc.yaml      credenziali R2 per backup
+│   └── taiga-cloudflare-acme.enc.yaml  ACME DNS-01 per taiga.lab.paroparo.it
 ├── k8s/                         Manifesti Kubernetes (GitOps, invariato)
-│   ├── clusters/dyson/         Kustomization radice (infrastructure + apps)
-│   ├── infra/                   HelmRelease cert-manager, traefik
+│   ├── clusters/dyson/          Kustomization radice (cert-manager, traefik, apps)
+│   ├── infra/                   HelmRelease cert-manager, traefik (split install/config)
 │   └── apps/                    una cartella per servizio (beszel, homepage,
-│                                infra-proxy, uptime-kuma)
+│                                infra-proxy, technitium, uptime-kuma)
 ├── docs/                        Documentazione (indice in docs/README.md)
 │   ├── README.md                indice navigabile
 │   ├── roadmap.md               piano in 5 fasi (con Fase 0 = migrazione NixOS)
 │   ├── stack-decisions.md       decisioni architetturali
 │   ├── 00-nixos-installation.md installazione NixOS baremetal
-│   ├── 01-network.md            bridge, firewall, DNS
+│   ├── 01-network.md            rete, firewall, DNS
 │   ├── 02-storage.md            layout ZFS
 │   ├── 03-backup.md             rclone → Cloudflare R2
-│   ├── 04-dns-technitium.md      Technitium DNS
+│   ├── 04-dns-technitium.md     Technitium DNS
 │   ├── 05-tls.md                Let's Encrypt + Cloudflare
 │   ├── 06-secrets-sops.md       SOPS + age
 │   ├── 07-gitops.md             k3s + Flux
