@@ -22,7 +22,7 @@
       ExecStart = pkgs.writeShellScript "rclone-backup" ''
         set -e
         R=${pkgs.rclone}/bin/rclone
-        REMOTE=r2:nebula-backup
+        REMOTE=r2:nebula
 
         $R sync /var/lib/technitium-dns-server $REMOTE/technitium/ --log-level INFO
 

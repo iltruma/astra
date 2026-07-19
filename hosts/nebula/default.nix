@@ -5,7 +5,7 @@
     ./hardware.nix
     ./networking.nix
     ./disko.nix
-    ./backup.nix
+    #./backup.nix
     ./impermanence.nix
     ./k3s.nix
     ./technitium.nix
