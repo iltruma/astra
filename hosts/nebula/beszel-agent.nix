@@ -20,7 +20,7 @@
 
   sops.secrets."beszel/agent-key" = {
     sopsFile = ../../secrets/beszel-agent-key.enc.yaml;
-    format = "raw";
+    format = "dotenv";
     # L'utente beszel-agent (creato dal modulo) deve poter leggere il file
     # per passarlo come EnvironmentFile a systemd.
     owner = "beszel-agent";
