@@ -131,7 +131,7 @@ L'ossatura della fleet. Va completata in ordine perché ogni pezzo sblocca i suc
 | S10    | Uptime Kuma           | 🟢    | Status page + monitor (HTTP/TCP/DNS/ping). `uptime.lab.paroparo.it`, manifesti in `k8s/apps/uptime-kuma/`, Flux GitOps. Doc: [08-monitoring.md](08-monitoring.md) — verificato 2026-06-20 |
 | S11    | Homepage              | 🟢    | dashboard dichiarativa (YAML in Git) dei servizi |
 | S12    | ~~Cloudflare Tunnel~~  | ❌ rimosso | Rimpiazzato da S15b Tailscale (mesh VPN, zero infrastruttura, subnet router approvata). |
-| S12b   | Beszel                | 🔴    | Monitoring host leggero: CPU, RAM, disco, rete di nebula. Singolo container k3s. Utile prima di Fase 4 per verificare il margine di risorse. |
+| S12b   | Beszel                | 🟢    | Monitoring host leggero: CPU, RAM, disco, rete di nebula. Hub in k3s + agent su `nebula` (`hosts/nebula/beszel-agent.nix`). Manca solo alerting (D11). |
 
 > Prometheus+Grafana+Loki rimossi dalla roadmap: troppo complessi per il caso d'uso.
 > Per metriche host: Beszel (D7). Per log: `journalctl` via SSH è sufficiente su single-node.

@@ -18,7 +18,7 @@ alternative scartate e rischio a lungo termine. Ogni decisione ha uno stato:
 | D4   | ArgoCD → Flux CD v2                  | 🟢 applicato | Native SOPS, niente plugin esterni |
 | D5   | Kubelet tuning k3s (low-RAM)         | 🟢 applicato | In `hosts/nebula/k3s.nix` → `extraFlags` |
 | D6   | Sealed Secrets → SOPS + age          | 🟢 applicato | Unificato host (sops-nix) + k8s (Flux SOPS) |
-| D7   | Beszel monitoring                    | 🟡 parziale | Hub in k3s, agent su host NixOS (opzionale) |
+| D7   | Beszel monitoring                    | 🟢 applicato | Hub in k3s + agent host NixOS attivi |
 | D8   | RAM upgrade 16 → 32 GB               | 🟡 parziale | Prerequisito hardware, non ancora fatto |
 | D9   | Pi-hole v6 → Technitium DNS          | 🟢 applicato | Modulo NixOS nativo (nixpkgs) |
 | D10  | Backup rclone → Cloudflare R2        | 🟡 in pausa | Modulo NixOS pronto, disabilitato 2026-07-19 (refactor on hold) |
@@ -248,7 +248,7 @@ Serve sapere CPU/RAM host, disco, container up/down.
 ### Scelta: Beszel + Uptime Kuma
 
 - **Uptime Kuma**: HTTP/TCP/DNS check, status page. In k3s (HelmRelease).
-- **Beszel**: metriche host (CPU, RAM, disco, I/O, rete, temperatura). Hub in k3s, agent opzionale su host NixOS.
+- **Beszel**: metriche host (CPU, RAM, disco, I/O, rete, temperatura). Hub in k3s + agent su host NixOS.
 
 ### Limitazione: K8s metrics
 
@@ -258,8 +258,7 @@ l'interesse è il nodo, non l'introspection dei workload.
 
 ### Stato
 
-🟡 Parziale — Hub in k3s operativo, agent host NixOS deployato in
-`hosts/nebula/beszel-agent.nix` (2026-07-19). Manca solo l'alerting (D11).
+🟢 Fatto — Hub in k3s + agent su `nebula` (`hosts/nebula/beszel-agent.nix`, 2026-07-19). Manca solo l'alerting (D11).
 
 ### Rischio a lungo termine
 
