@@ -92,6 +92,13 @@ docs/              - Documentazione step-by-step (roadmap, decisioni, migration)
 .github/workflows/ - CI (nix flake check, kubeconform, gitleaks)
 ```
 
+> **Regola di organizzazione**: i moduli tecnici (technitium, k3s, backup)
+> vivono accanto al loro host in `hosts/<host>/`, non in `modules/`. `modules/`
+> contiene solo helper *cross-host* (utenti, SSH, sops, keys). Quando un
+> secondo host NixOS importerà uno di questi servizi, il modulo verrà
+> **promosso** in `modules/` con opzioni (`mkOption` + `config`) per la
+> riusabilità. Per Astra single-host questo refactor è YAGNI.
+
 ## Comandi utili
 
 ```bash
