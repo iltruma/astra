@@ -9,6 +9,7 @@
     ./impermanence.nix
     ./k3s.nix
     ./technitium.nix
+    ./beszel-agent.nix
     ../../modules/common.nix
   ];
 
