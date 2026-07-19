@@ -1,8 +1,8 @@
 { config, pkgs, ... }:
 
 # ----------------------------------------------------------------------------
-# Beszel agent — monitora le risorse di nebula (CPU, RAM, disco, rete) e le
-# invia all'hub Beszel esposto in k3s (beszel.lab.paroparo.it).
+# Beszel agent — monitora le risorse di nebula (CPU, RAM, disco, rete, SMART
+# dischi) e le invia all'hub Beszel esposto in k3s (beszel.lab.paroparo.it).
 # Modulo NixOS: services.beszel.agent (file upstream: nixos/modules/services/
 # monitoring/beszel-agent.nix).
 # ----------------------------------------------------------------------------
@@ -16,6 +16,11 @@
     # La enrollment key è letta dal file decifrato da sops al boot.
     # KEY_FILE punta al file con la sola chiave (no formato KEY=valore)
     environment.KEY_FILE = config.sops.secrets."beszel/agent-key".path;
+    smartmon = {
+      enable = true;
+      # Lista dischi da monitorare. Solo /dev/sda su questo host.
+      deviceAllow = [ "/dev/sda" ];
+    };
   };
 
   sops.secrets."beszel/agent-key" = {
