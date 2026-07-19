@@ -85,5 +85,7 @@ k3s flux get helmreleases -A
 # Stato servizi host
 systemctl status technitium-dns-server
 systemctl status k3s
-systemctl list-timers rclone-backup.timer
+systemctl status beszel-agent
+systemctl status tailscaled
+# systemctl list-timers rclone-backup.timer   # in pausa dal 2026-07-19
 ```

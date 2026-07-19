@@ -75,14 +75,15 @@ DNS come servizio NixOS nativo.
 - **DNS**: Technitium DNS (modulo NixOS nativo)
 - **Ingress**: Traefik (HelmRelease Flux in k8s)
 - **TLS**: Let's Encrypt (DNS-01 Cloudflare) + cert-manager
-- **Backup**: rclone → Cloudflare R2 (systemd timer)
+- **Backup**: rclone → Cloudflare R2 (systemd timer, **in pausa** dal 2026-07-19: `hosts/nebula/backup.nix` commentato in `default.nix`)
 
 ## Struttura
 
 ```
 flake.nix          - Entry point NixOS (pin nixpkgs, nixpkgs-unstable, sops-nix, disko)
 hosts/nebula/      - Config specifica del server: disko, hardware, networking,
-                     impermanence, k3s, technitium, backup (servizi host)
+                     impermanence, k3s, technitium, backup (in pausa), tailscale,
+                     beszel-agent (servizi host)
 hosts/taiga/       - Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
 hosts/installer/   - ISO NixOS headless per nixos-anywhere
 modules/           - Moduli NixOS riusabili: common (utenti, SSH, sops), keys
@@ -92,12 +93,12 @@ docs/              - Documentazione step-by-step (roadmap, decisioni, migration)
 .github/workflows/ - CI (nix flake check, kubeconform, gitleaks)
 ```
 
-> **Regola di organizzazione**: i moduli tecnici (technitium, k3s, backup)
-> vivono accanto al loro host in `hosts/<host>/`, non in `modules/`. `modules/`
-> contiene solo helper *cross-host* (utenti, SSH, sops, keys). Quando un
-> secondo host NixOS importerà uno di questi servizi, il modulo verrà
-> **promosso** in `modules/` con opzioni (`mkOption` + `config`) per la
-> riusabilità. Per Astra single-host questo refactor è YAGNI.
+> **Regola di organizzazione**: i moduli tecnici (technitium, k3s, backup,
+> tailscale, beszel-agent) vivono accanto al loro host in `hosts/<host>/`, non
+> in `modules/`. `modules/` contiene solo helper *cross-host* (utenti, SSH,
+> sops, keys). Quando un secondo host NixOS importerà uno di questi servizi, il
+> modulo verrà **promosso** in `modules/` con opzioni (`mkOption` + `config`)
+> per la riusabilità. Per Astra single-host questo refactor è YAGNI.
 
 ## Comandi utili
 

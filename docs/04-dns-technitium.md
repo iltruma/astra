@@ -209,8 +209,9 @@ Due modi per raggiungerla:
 
 ## Backup e restore
 
-Lo state di Technitium vive in `/var/lib/technitium-dns-server`. È incluso
-nel backup rclone notturno (vedi [03-backup.md](03-backup.md)).
+Lo state di Technitium vive in `/var/lib/technitium-dns-server`. Era incluso
+nel backup rclone notturno (in pausa dal 2026-07-19, vedi
+[03-backup.md](03-backup.md)).
 
 Restore:
 ```bash

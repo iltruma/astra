@@ -130,7 +130,7 @@ L'ossatura della fleet. Va completata in ordine perché ogni pezzo sblocca i suc
 |--------|-----------------------|-------|------|
 | S10    | Uptime Kuma           | 🟢    | Status page + monitor (HTTP/TCP/DNS/ping). `uptime.lab.paroparo.it`, manifesti in `k8s/apps/uptime-kuma/`, Flux GitOps. Doc: [08-monitoring.md](08-monitoring.md) — verificato 2026-06-20 |
 | S11    | Homepage              | 🟢    | dashboard dichiarativa (YAML in Git) dei servizi |
-| S12    | ~~Cloudflare Tunnel~~  | ❌ rimosso | Per accesso esterno valutare in futuro Tailscale (mesh VPN, zero infrastruttura). |
+| S12    | ~~Cloudflare Tunnel~~  | ❌ rimosso | Rimpiazzato da S15b Tailscale (mesh VPN, zero infrastruttura, subnet router approvata). |
 | S12b   | Beszel                | 🔴    | Monitoring host leggero: CPU, RAM, disco, rete di nebula. Singolo container k3s. Utile prima di Fase 4 per verificare il margine di risorse. |
 
 > Prometheus+Grafana+Loki rimossi dalla roadmap: troppo complessi per il caso d'uso.
@@ -157,6 +157,14 @@ Obiettivo: usare tutto il backbone (GitOps + TLS + ingress) per pubblicare codic
 | S15b   | Tailscale               | accesso remoto a Jellyfin da device esterni (es. Android TV babbo). Modulo NixOS su nebula + app Tailscale sulla TV. Gratis fino a 3 utenti/100 device. Subnet router 192.168.178.0/24 (annuncio + approvazione manuale iniziale). Auth key in SOPS (`secrets/tailscale-auth.enc.yaml`). | 🟢    | S15         |
 | S16    | Download stack          | qBittorrent (⚠️ dietro VPN egress) + Prowlarr + Sonarr + Radarr + Bazarr |
 | S17    | Jellyseerr              | UI di richiesta film/serie |
+
+> **S15b — stato Tailscale (2026-07-19)**:
+> - Modulo NixOS: `hosts/nebula/tailscale.nix` con `useRoutingFeatures = "server"` (abilita IP forwarding + annuncio subnet route)
+> - Auth key in `secrets/tailscale-auth.enc.yaml` (cifrata SOPS)
+> - Firewall aperto su `41641/UDP` (WireGuard inbound)
+> - Annuncia `192.168.178.0/24` come subnet route (approvata manualmente in admin Tailscale)
+> - IP Tailscale di nebula: `100.109.52.68`
+> - Tailscale rimpiazza S12 Cloudflare Tunnel come soluzione di accesso remoto
 
 ⚠️ **Storage**: i workload media usano un dataset ZFS dedicato (`tank/media`) montato
 come `hostPath` su k3s. Niente Longhorn. Per una collezione estesa servirà un HDD

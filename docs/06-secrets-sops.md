@@ -74,11 +74,11 @@ Dopo il primo switch, verifica che i secret siano stati decifrati:
 
 ```bash
 ssh cosimo@192.168.178.2 'sudo ls /run/secrets/'
-# Deve contenere: k3s/  backup/  ...
+# Deve contenere: k3s/  beszel/  tailscale/  ...
 ```
 
 > **Perché è obbligatorio**: senza la chiave in `/persist`, sops-nix non può
-> decifrare nulla e l'attivazione di k3s/Flux/rclone-backup fallisce. Il
+> decifrare nulla e l'attivazione di k3s/Flux/tailscale/beszel fallisce. Il
 > `--extra-files` è il bootstrap standard riconosciuto da nixos-anywhere
 > (vedi [docs ufficiali](https://nix-community.github.io/nixos-anywhere/howtos/secrets.html)).
 
@@ -129,7 +129,10 @@ Decifrati da **sops-nix** all'attivazione NixOS, montati in `/run/secrets/`
 |------|-----------|----------|
 | `flux-git-auth.enc.yaml` | SSH key per Flux pull da GitHub | k3s (manifest `flux-secret-git-auth.yaml`) |
 | `flux-sops-age.enc.yaml` | Chiave age privata per Flux SOPS | k3s (Secret `sops-age` in `flux-system`) |
-| `rclone-env.enc.yaml` | Credenziali R2 per backup | systemd `rclone-backup` (env file) |
+| `rclone-env.enc.yaml` | Credenziali R2 per backup | systemd `rclone-backup` (env file, **in pausa**) |
+| `beszel-agent-key.enc.yaml` | Enrollment key Beszel agent | servizio host `beszel-agent` |
+| `tailscale-auth.enc.yaml` | Auth key Tailscale | servizio host `tailscaled` |
+| `taiga-cloudflare-acme.enc.yaml` | API token Cloudflare per ACME DNS-01 | host `taiga` (Mainsail) |
 
 ### Configurazione in `hosts/nebula/k3s.nix`
 

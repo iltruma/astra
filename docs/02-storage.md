@@ -94,7 +94,9 @@ maggior parte delle operazioni basta uno snapshot manuale prima di
 `nixos-rebuild switch`.
 
 Per operazioni ad alto rischio (es. cambio schema partizioni, upgrade NixOS
-major), considera un backup completo rclone prima.
+major), considera un backup completo rclone prima. *Nota: il backup rclone
+è attualmente in pausa ([03-backup.md](03-backup.md)), quindi per ora affidati
+solo agli snapshot ZFS locali.*
 
 ## ZFS tuning
 
@@ -110,7 +112,8 @@ services.zfs.trim.enable = true;       # TRIM per SSD
 NixOS offre il pattern "impermanence" (`/` resettato a ogni boot, stato in
 `/persist`). Nebula ha scelto di **non** usarlo: complica il rollback e il
 supporto di k3s state, e i benefici su single-host sono marginali. Lo state
-vive normalmente sui dataset e viene backuppato con rclone.
+vive normalmente sui dataset (e, quando il backup rclone sarà ripreso, sarà
+sincronizzato su R2 — vedi [03-backup.md](03-backup.md), oggi in pausa).
 
 ## Storage aggiuntivo (futuro)
 

@@ -185,7 +185,8 @@ nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
 > con `Permission denied` su `/nix/var/nix/profiles/.0_system`.
 
 Adesso partono tutti i moduli dichiarati nel flake (Technitium, k3s, sops-nix,
-rclone-backup timer).
+beszel-agent, tailscale). Il timer `rclone-backup` è attualmente in pausa
+(`backup.nix` commentato in `default.nix`, vedi [03-backup.md](03-backup.md)).
 
 ### 4.2 Verifica
 
@@ -199,14 +200,17 @@ sudo zfs list
 ls -la /persist/sops/age/                       # deve contenere keys.txt
 
 # sops-nix ha decifrato i secret? (deve essere popolato)
-sudo ls /run/secrets/                            # k3s/, backup/, ...
+sudo ls /run/secrets/                            # k3s/, beszel/, tailscale/
 sudo ls /run/secrets/k3s/                        # flux-git-auth, flux-sops-age
-sudo ls /run/secrets/backup/                     # rclone-env
+sudo ls /run/secrets/beszel/                     # agent-key
+sudo ls /run/secrets/tailscale/                  # auth-key
 
 # Servizi host
 sudo systemctl status technitium-dns-server
 sudo systemctl status k3s
-sudo systemctl status rclone-backup.timer        # attivo, prossimo run alle 03:00
+sudo systemctl status beszel-agent               # monitoring host
+sudo systemctl status tailscaled                 # mesh VPN
+# sudo systemctl status rclone-backup.timer     # in pausa dal 2026-07-19
 
 # k3s
 sudo k3s kubectl get nodes
@@ -315,12 +319,13 @@ Per ricostruire da zero:
 
 1. USB NixOS minimal + procedura Step 1-4
 2. Cifra di nuovo i secret con sops (devi avere la chiave age backuppata!)
-3. Verifica che i backup rclone siano disponibili su R2
+3. *Backup rclone attualmente in pausa* (vedi [03-backup.md](03-backup.md)) —
+   per ora non c'è restore off-site; ricostruzione completa del cluster da Git
 
 **Importante**: la chiave age deve essere backuppata FUORI dal repo (password
 manager + copia offline). Senza chiave, i secret sono irrecuperabili.
 
-### Restore da R2
+### Restore da R2 *(quando il backup sarà ripreso)*
 
 ```bash
 # Setup rclone con credenziali

@@ -1,5 +1,15 @@
 # Backup / Disaster Recovery
 
+> ⚠️ **WORK IN PROGRESS — ON HOLD** (commit `e71a299`, 2026-07-19)
+>
+> Il backup rclone → Cloudflare R2 è **disabilitato**:
+> - `hosts/nebula/backup.nix` esiste ma è **commentato** in `hosts/nebula/default.nix` (`#./backup.nix`)
+> - Il modulo termina con `#MESSO ON HOLD FINO A NUOVA IDEA` in cima al file
+> - Il timer systemd `rclone-backup.timer` non è attivo
+>
+> Tutto il contenuto di questo doc resta come **riferimento per quando il setup
+> verrà ripreso**. Non riflette uno stato attivo.
+
 Strategia di backup off-site e procedura di ricostruzione. Configurato in
 [`hosts/nebula/backup.nix`](../hosts/nebula/backup.nix).
 

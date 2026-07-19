@@ -55,21 +55,10 @@ richiede la label namespace `pod-security.kubernetes.io/enforce: privileged`
 (già impostata). Metriche host OK, metriche per Pod/Deployment come oggetti
 K8s no.
 
-Per avere un agent sul **host NixOS** (fuori da k3s), serve installarlo via Nix:
-
-```nix
-# hosts/nebula/beszel-agent.nix (da creare)
-services.beszel-agent = {
-  enable = true;
-  host = "beszel.lab.paroparo.it";
-  port = 45876;
-  # Secret key condiviso con l'hub (in secrets/beszel-agent-key.enc.yaml)
-};
-```
-
-> **Stato**: agent host non ancora implementato. Per ora nessun agent
-> fornisce metriche (il DaemonSet in K8s non è deployato). Quando l'agent
-> host NixOS sarà pronto, popolera il hub con CPU/RAM/disco/rete di `nebula`.
+L'agent sul **host NixOS** è implementato in `hosts/nebula/beszel-agent.nix`
+(modulo `services.beszel.agent`): legge la enrollment key da
+`secrets/beszel-agent-key.enc.yaml` (sops-nix) e popola l'hub
+`beszel.lab.paroparo.it` con CPU/RAM/disco/rete di `nebula`.
 
 ## Notifiche
 
@@ -96,6 +85,7 @@ Entrambi supportano notifiche push. Canali consigliati:
 ## Backup
 
 - Uptime Kuma: PV `5Gi` con SQLite DB. Backup con rclone in `/var/lib/rancher/k3s/...`
+  (*in pausa dal 2026-07-19, vedi [03-backup.md](03-backup.md)*).
 - Beszel: PV con DB hub. Stesso backup.
 
 ## Verifica
@@ -117,7 +107,7 @@ curl -v https://beszel.lab.paroparo.it
 
 | Decisione | Stato | Note |
 |-----------|-------|------|
-| D7 — Beszel monitoring  | 🟡 parziale | Hub OK, agent host NixOS da implementare |
+| D7 — Beszel monitoring  | 🟡 parziale | Hub in k3s + agent host NixOS attivi; manca solo alerting |
 | D11 — Alerting ntfy | 🔴 proposto | Da configurare dopo Beszel agent host |
 
 ## Alternative considerate (per memoria)

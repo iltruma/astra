@@ -45,7 +45,7 @@ L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
 | Ingress            | Traefik (HelmRelease Flux in k3s)                       |
 | TLS                | cert-manager + Let's Encrypt (DNS-01 Cloudflare)        |
 | DNS interno        | Technitium DNS (servizio NixOS nativo, split-horizon)   |
-| Backup             | rclone → Cloudflare R2 (systemd timer)                  |
+| Backup             | rclone → Cloudflare R2 (in pausa: `hosts/nebula/backup.nix` commentato in `default.nix`, vedi [docs/03-backup.md](docs/03-backup.md)) |
 
 ---
 
@@ -61,7 +61,7 @@ L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
                    │   ├─ cert-manager       (TLS ← Let's Encrypt via DNS-01 Cloudflare)
                    │   ├─ Flux CD v2         (GitOps → k8s/clusters/dyson/)
                    │   └─ app (Fasi 2-4)
-                  └─ systemd timer rclone   (backup → R2)
+                   └─ systemd timer rclone   (backup → R2, in pausa)
 
   taiga  .43  ─  Raspberry Pi 4 (NixOS, satellite)
                   └─ Klipper + Moonraker + Mainsail   (stampante 3D)
@@ -104,7 +104,9 @@ astra/
 │   │   ├── impermanence.nix     persistenza /persist
 │   │   ├── k3s.nix              k3s server + Flannel (bundled), CoreDNS custom, Flux secrets bootstrap
 │   │   ├── technitium.nix       servizio DNS (nixpkgs-unstable)
-│   │   ├── backup.nix           systemd timer rclone → R2
+│   │   ├── backup.nix           systemd timer rclone → R2 (in pausa)
+│   │   ├── tailscale.nix        Tailscale mesh VPN, subnet router 192.168.178.0/24
+│   │   ├── beszel-agent.nix     Beszel agent host (monitoring risorse nebula)
 │   │   ├── dns-zone.lab.paroparo.it  zona BIND versionata in Git
 │   │   └── dns-blocklists.txt   blocklist Technitium (HaGeZi, Steven Black, AdGuard)
 │   ├── taiga/                   Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
@@ -116,7 +118,9 @@ astra/
 ├── secrets/                     Secret host cifrati con SOPS + age
 │   ├── flux-git-auth.enc.yaml   SSH key per Flux pull
 │   ├── flux-sops-age.enc.yaml   chiave age per decifrare k8s/*.enc.yaml
-│   ├── rclone-env.enc.yaml      credenziali R2 per backup
+│   ├── rclone-env.enc.yaml      credenziali R2 per backup (in pausa)
+│   ├── beszel-agent-key.enc.yaml  enrollment key Beszel agent host
+│   ├── tailscale-auth.enc.yaml  auth key Tailscale (mesh VPN)
 │   └── taiga-cloudflare-acme.enc.yaml  ACME DNS-01 per taiga.lab.paroparo.it
 ├── k8s/                         Manifesti Kubernetes (GitOps, invariato)
 │   ├── clusters/dyson/          Kustomization radice (cert-manager, traefik, apps)
@@ -152,8 +156,8 @@ astra/
 
 | # | Fase                            | Stato  | Sprint chiave                                |
 |---|---------------------------------|--------|----------------------------------------------|
-| 1 | Backbone                        | 🟢     | S0 Technitium DNS, S2 k3s+Flannel, S3 cert-manager, S4 Flux CD, S5 SOPS + age, S6 backup |
-| 2 | Accesso & osservabilità         | 🟡     | S10 Uptime Kuma — monitoring (S7-S9) in HOLD |
+| 1 | Backbone                        | 🟢     | S0 Technitium DNS, S2 k3s+Flannel, S3 cert-manager, S4 Flux CD, S5 SOPS + age, S6 backup (in pausa) |
+| 2 | Accesso & osservabilità         | 🟡     | S10 Uptime Kuma, S15b Tailscale (accesso remoto); S11 Homepage, S12 Cloudflare Tunnel rimosso; S12b Beszel 🔴 |
 | 3 | App tue                         | 🔴     | S13 — da pianificare                          |
 | 4 | Media                           | 🔴     | S15 Jellyfin, S16 download stack, S17 Jellyseerr (storage: ZFS `tank/media` hostPath) |
 | 5 | Rete avanzata (VLAN)            | 🔴     | S18 — richiede switch managed                |
@@ -171,7 +175,10 @@ nix-shell -p sops age --run "bash"
 age-keygen -o age-key.txt                              # genera chiave age
 sops --encrypt --in-place secrets/flux-git-auth.enc.yaml
 sops --encrypt --in-place secrets/flux-sops-age.enc.yaml
-sops --encrypt --in-place secrets/rclone-env.enc.yaml
+sops --encrypt --in-place secrets/beszel-agent-key.enc.yaml
+sops --encrypt --in-place secrets/tailscale-auth.enc.yaml
+sops --encrypt --in-place secrets/taiga-cloudflare-acme.enc.yaml
+# secrets/rclone-env.enc.yaml: richiesto solo se si riattiva il backup
 
 # 2. Genera hostId univoco per ZFS
 head -c4 /dev/urandom | od -A none -t x4

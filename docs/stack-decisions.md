@@ -21,7 +21,7 @@ alternative scartate e rischio a lungo termine. Ogni decisione ha uno stato:
 | D7   | Beszel monitoring                    | 🟡 parziale | Hub in k3s, agent su host NixOS (opzionale) |
 | D8   | RAM upgrade 16 → 32 GB               | 🟡 parziale | Prerequisito hardware, non ancora fatto |
 | D9   | Pi-hole v6 → Technitium DNS          | 🟢 applicato | Modulo NixOS nativo (nixpkgs) |
-| D10  | Backup rclone → Cloudflare R2        | 🟢 applicato | systemd timer NixOS |
+| D10  | Backup rclone → Cloudflare R2        | 🟡 in pausa | Modulo NixOS pronto, disabilitato 2026-07-19 (refactor on hold) |
 | D11  | Alerting channel (ntfy)              | 🔴 proposto | Beszel + Uptime Kuma → ntfy |
 | D12  | Dependency updates (Renovate)        | 🔴 proposto | Aggiornamenti automatici Helm chart, Nix packages |
 | D13  | ZFS encryption rimossa               | 🟢 applicato | No threat model reale su astra; complessità TPM2 > benefici |
@@ -258,7 +258,8 @@ l'interesse è il nodo, non l'introspection dei workload.
 
 ### Stato
 
-🟡 Parziale — Hub in k3s operativo, agent non ancora deployato su host.
+🟡 Parziale — Hub in k3s operativo, agent host NixOS deployato in
+`hosts/nebula/beszel-agent.nix` (2026-07-19). Manca solo l'alerting (D11).
 
 ### Rischio a lungo termine
 
@@ -352,6 +353,14 @@ systemd.timers.rclone-backup = {
 ```
 
 Configurazione R2 in `secrets/rclone-env.enc.yaml` (cifrato con sops-nix).
+
+### Stato
+
+🟡 **In pausa** dal 2026-07-19 (commit `e71a299`). `hosts/nebula/backup.nix`
+esiste ed è funzionante, ma è **commentato** in `hosts/nebula/default.nix`
+(`#./backup.nix`). Il file termina con il commento
+`#MESSO ON HOLD FINO A NUOVA IDEA`. Nessun timer rclone è attivo. Il modulo
+verrà ripreso con un nuovo approccio (da definire).
 
 ### Rischio a lungo termine
 
@@ -462,6 +471,6 @@ Da eseguire almeno una volta dopo la migrazione NixOS:
 2. `nixos-install --flake .#nebula` su disco pulito
 3. Verifica che k3s, Flannel, Flux ripartano
 4. Verifica che Technitium risolva `lab.paroparo.it`
-5. Verifica che il backup rclone sia leggibile da R2
+5. Verifica che il backup rclone sia leggibile da R2 *(in pausa, da aggiornare quando D10 viene ripreso)*
 
 Pianificare come sprint stand-alone dopo il cutover.
