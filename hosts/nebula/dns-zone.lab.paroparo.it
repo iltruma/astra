@@ -41,7 +41,7 @@ taiga   IN  A   192.168.178.43
 uptime      IN  A   192.168.178.2
 homepage    IN  A   192.168.178.2
 beszel      IN  A   192.168.178.2
-dns         IN  A   192.168.178.2
+sentinel    IN  A   192.168.178.2
 
 ; ── CAA: limita quali CA possono emettere cert per lab.paroparo.it ─────────
 ; Best practice per hardening: blocca CA non autorizzate.
