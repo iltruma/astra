@@ -59,7 +59,7 @@
 
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
-  # ip6_tables richiesti da k3s/Cilium anche con IPv6 disabilitato
+  # ip6_tables: richiesti da k3s/Flannel anche con IPv6 disabilitato
   boot.kernelModules = [
     "ip6_tables"
     "ip6table_mangle"

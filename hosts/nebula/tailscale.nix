@@ -19,6 +19,7 @@
     sopsFile = ../../secrets/tailscale-auth.enc.yaml;
   };
 
+
   # Porta wireguard di Tailscale (necessaria per i client Tailscale che arrivano da Internet)
   # 41641/UDP. Di default NixOS non la apre.
   networking.firewall.allowedUDPPorts = [ 41641 ];

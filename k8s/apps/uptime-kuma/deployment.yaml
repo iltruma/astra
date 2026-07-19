@@ -25,9 +25,6 @@ spec:
             - name: http
               containerPort: 3001
           env:
-            # Uptime Kuma 2.x: skip the first-run setup wizard (we use the
-            # built-in DB). The admin user is created via the web UI on
-            # first visit. No secrets in Git.
             - name: UPTIME_KUMA_DISABLE_FRAME_SAMEORIGIN
               value: "false"
           livenessProbe:

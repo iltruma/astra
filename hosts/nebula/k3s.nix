@@ -5,12 +5,9 @@
     enable = true;
     role = "server";
 
+    # NON disabilitare servicelb (klipper-lb): Traefik Service type=LoadBalancer lo richiede
     extraFlags = toString [
       "--disable=traefik"              # gestito da Flux
-      # klipper-lb (servicelb) è il LoadBalancer controller built-in di k3s.
-      # Assegna IP ai Service type=LoadBalancer. Per single-node, usa lo
-      # stesso IP del nodo (192.168.178.2). Traefik è esposto via
-      # Service LoadBalancer con porte 80/443 → forward a 8000/8443.
       "--disable=metrics-server"       # Beszel copre monitoring
       "--write-kubeconfig-mode=0644"
     ];
