@@ -1,8 +1,9 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, unstable, ... }:
 
 {
   services.technitium-dns-server = {
     enable = true;
+    package = unstable.technitium-dns-server; 
     # Gestisco il firewall manualmente per:
     # - 53 UDP/TCP: DNS, aperto per la LAN
     # - 53443 (HTTPS web UI): NON aperto — l'unico accesso è via

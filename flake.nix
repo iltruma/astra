@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -30,9 +31,12 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware";
   };
 
-  outputs = { self, nixpkgs, sops-nix, disko, nixos-anywhere, impermanence, nixos-hardware, ... }: {
+  outputs = { self, nixpkgs, nixpkgs-unstable, sops-nix, disko, nixos-anywhere, impermanence, nixos-hardware, ... }: {
     nixosConfigurations.nebula = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
+      specialArgs = {
+        unstable = nixpkgs-unstable.legacyPackages.x86_64-linux;
+      };
       modules = [
         ./hosts/nebula
         sops-nix.nixosModules.sops
