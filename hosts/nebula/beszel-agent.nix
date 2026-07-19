@@ -14,13 +14,13 @@
     # Beszel che gira come pod k3s sullo stesso host.
     openFirewall = true;
     # La enrollment key è letta dal file decifrato da sops al boot.
-    # EnvironmentFile accetta il formato KEY=valore (env vars standard).
-    environmentFile = config.sops.secrets."beszel/agent-key".path;
+    # KEY_FILE punta al file con la sola chiave (no formato KEY=valore)
+    environment.KEY_FILE = config.sops.secrets."beszel/agent-key".path;
   };
 
   sops.secrets."beszel/agent-key" = {
     sopsFile = ../../secrets/beszel-agent-key.enc.yaml;
-    format = "dotenv";
+    format = "yaml";
     # L'utente beszel-agent (creato dal modulo) deve poter leggere il file
     # per passarlo come EnvironmentFile a systemd.
     owner = "beszel-agent";
