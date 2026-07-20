@@ -1,3 +1,4 @@
+# impermanence: bind-mount su /persist dei path da preservare tra reboot
 { ... }:
 
 {

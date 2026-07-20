@@ -71,7 +71,7 @@ Questo abilita:
 ## Zone file (BIND)
 
 I record DNS sono versionati in Git come zona BIND:
-[`hosts/nebula/dns-zone.lab.paroparo.it`](../hosts/nebula/dns-zone.lab.paroparo.it)
+[`hosts/nebula/dns/dns-zone.lab.paroparo.it`](../hosts/nebula/dns/dns-zone.lab.paroparo.it)
 
 Per importare in Technitium dopo un reinstall:
 - *Zones → lab.paroparo.it → Import → seleziona il file*
@@ -121,8 +121,8 @@ ssh -L 5380:127.0.0.1:5380 cosimo@192.168.178.2
 
 5. **Blocklist** (consigliato):
    - *Settings → Blocking* → Enable Blocking ON, Blocking Type NX Domain
-   - In "Allow / Block List URLs" incollare le URL da
-     [`hosts/nebula/dns-blocklists.txt`](../hosts/nebula/dns-blocklists.txt) —
+    - In "Allow / Block List URLs" incollare le URL da
+      [`hosts/nebula/dns/dns-blocklists.txt`](../hosts/nebula/dns/dns-blocklists.txt) —
      tre liste di qualità: HaGeZi Pro (~200k domini, basso tasso falsi positivi),
      Steven Black (classica consolidata), AdGuard DNS filter (copertura
      malware/tracker extra). Auto-update ogni 24h.

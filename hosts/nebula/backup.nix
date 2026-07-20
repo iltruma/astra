@@ -1,5 +1,4 @@
-#MESSO ON HOLD FINO A NUOVA IDEA
-
+# rclone backup to Cloudflare R2 — in pausa dal 2026-07-19 (non importato in default.nix)
 { config, lib, pkgs, ... }:
 
 {

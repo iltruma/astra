@@ -1,3 +1,4 @@
+# Astra homelab NixOS flake — nebula (x86_64) + taiga (RPi4) + installer ISO
 {
   description = "Astra — NixOS fleet (Dell Optiplex 3050 + Raspberry Pi 4)";
 
@@ -15,12 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Install:
-    #   nix run github:nix-community/nixos-anywhere -- \
-    #     --flake .#nebula --build-on local \
-    #     --target-host root@192.168.178.2 \
-    #     --extra-files <dir-con-chiave-age>
-    # Vedi docs/00-nixos-installation.md §3 per il bootstrap sops
     nixos-anywhere = {
       url = "github:nix-community/nixos-anywhere";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -45,7 +40,6 @@
       ];
     };
 
-    # nixos-rebuild switch --flake .#taiga --target-host pi@192.168.178.43 --build-host localhost
     nixosConfigurations.taiga = nixpkgs.lib.nixosSystem {
       system = "aarch64-linux";
       modules = [

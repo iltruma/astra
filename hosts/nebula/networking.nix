@@ -1,3 +1,4 @@
+# nebula static IP, firewall, DNS
 { config, lib, pkgs, ... }:
 
 {
@@ -21,11 +22,11 @@
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [
-      22    # SSH
-      53    # DNS
-      80    # HTTP
-      443   # HTTPS
-      6443  # k3s API
+      22
+      53
+      80
+      443
+      6443
     ];
     allowedUDPPorts = [ 53 ];
   };

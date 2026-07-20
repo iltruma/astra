@@ -311,22 +311,3 @@ raggiungibili da VLAN 20 su :443, non su :22.
 | Sprint | Servizio | Note |
 |--------|----------|------|
 | S19 | Mullvad + Gluetun | Gluetun come container sidecar a qBittorrent in k3s. Mullvad (~5€/mese, no-log, WireGuard nativo). Port forwarding dinamico via API Mullvad, aggiornato automaticamente da Gluetun. |
-
----
-
-
-
-```
-flake.nix         Entry point NixOS (pin nixpkgs, nixpkgs-unstable, sops-nix, disko)
-hosts/nebula/    Config host: disko (ZFS), hardware, networking, default,
-                 impermanence, k3s, technitium, backup
-hosts/taiga/      Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
-hosts/installer/  ISO NixOS headless per nixos-anywhere
-modules/          Moduli NixOS: common, keys
-secrets/          *.enc.yaml cifrati con SOPS + age (sops-nix)
-k8s/              Manifesti GitOps (Flux): clusters/dyson/, infra/, apps/
-docs/             Guide operative: install, network, storage, dns, tls, secrets, gitops
-.github/workflows/  CI: nix flake check, kubeconform, gitleaks
-.sops.yaml        Regole cifratura SOPS
-AGENTS.md         Regole agenti (opencode, Claude Code)
-```

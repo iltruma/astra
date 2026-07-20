@@ -79,7 +79,8 @@ age-keygen -o ~/.config/sops/age/keys.txt
 # sono già cifrati con la chiave corrente)
 sops --encrypt --in-place secrets/flux-git-auth.enc.yaml
 sops --encrypt --in-place secrets/flux-sops-age.enc.yaml
-sops --encrypt --in-place secrets/rclone-env.enc.yaml
+# secrets/rclone-env.enc.yaml: necessario solo se si riattiva il backup rclone
+# (backup.nix è attualmente in pausa — vedi docs/03-backup.md)
 
 # Aggiungi la tua SSH pubblica in modules/common.nix:
 #   users.users.cosimo.openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAA..." ];
@@ -266,7 +267,7 @@ Configurazione minima:
 - Blocklist: incolla le URL da `hosts/nebula/dns-blocklists.txt` (HaGeZi Pro +
   Steven Black + AdGuard DNS filter)
 
-Il file [`hosts/nebula/dns-zone.lab.paroparo.it`](../hosts/nebula/dns-zone.lab.paroparo.it)
+Il file [`hosts/nebula/dns/dns-zone.lab.paroparo.it`](../hosts/nebula/dns/dns-zone.lab.paroparo.it)
 contiene la zona BIND completa (record espliciti, CAA, SPF) — importabile
 via UI per non ricreare a mano.
 

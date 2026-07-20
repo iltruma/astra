@@ -1,3 +1,4 @@
+# taiga hardware: RPi4, kernel, filesystem, zram
 { config, lib, pkgs, modulesPath, ... }:
 
 {

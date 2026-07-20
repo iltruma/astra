@@ -1,3 +1,4 @@
+# nebula hardware: ZFS filesystems, boot, kernel modules
 { config, lib, pkgs, modulesPath, ... }:
 
 {

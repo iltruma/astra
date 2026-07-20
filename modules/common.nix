@@ -1,3 +1,4 @@
+# Shared: user, SSH, SOPS, locale, base packages
 { config, lib, pkgs, ... }:
 
 {

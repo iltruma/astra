@@ -1,3 +1,4 @@
+# taiga — Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
 { config, lib, pkgs, ... }:
 
 {

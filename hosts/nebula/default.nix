@@ -1,3 +1,4 @@
+# nebula — top-level NixOS config for Dell Optiplex 3050
 { config, lib, pkgs, ... }:
 
 {
@@ -37,9 +38,8 @@
   # Sostituisce `kubectl get` ripetuti, lanciato da SSH con `k9s`.
   environment.systemPackages = [ pkgs.k9s ];
 
-  # Dice a k9s/kubectl/flux dove trovare il kubeconfig di k3s. k3s lo scrive
-  # in /etc/rancher/k3s/k3s.yaml con mode 0644 (vedi k3s.nix extraFlags).
-  # Senza questo, k9s dà "Plugins load failed!" perché ~/.kube/config non esiste.
+  # k3s scrive il kubeconfig in /etc/rancher/k3s/k3s.yaml (mode 0644, vedi k3s.nix).
+  # Senza questo, k9s fallisce con "Plugins load failed!" perché ~/.kube/config non esiste.
   environment.sessionVariables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };

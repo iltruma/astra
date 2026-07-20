@@ -1,3 +1,4 @@
+# ZFS pool layout and disko partition config for nebula
 { lib, ... }:
 {
   disko.devices = {

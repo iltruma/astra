@@ -1,3 +1,4 @@
+# taiga static IP and firewall
 { ... }:
 
 {
@@ -20,9 +21,9 @@
     firewall = {
       enable = true;
       allowedTCPPorts = [
-        22    # SSH
-        80    # HTTP
-        443   # HTTPS Mainsail
+        22
+        80
+        443
         7125  # Moonraker API
       ];
     };

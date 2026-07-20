@@ -55,13 +55,15 @@ L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
                    rete 192.168.178.0/24
   iris     .1  ─  Router Fritz!Box         (gateway)
   nebula  .2  ─  NixOS baremetal (nodo principale)
-                  ├─ Technitium DNS         (servizio NixOS, porta 53)
-                  ├─ k3s                    (servizio NixOS, porta 6443)
-                   │   ├─ Traefik            (ingress 80/443, hostNetwork)
-                   │   ├─ cert-manager       (TLS ← Let's Encrypt via DNS-01 Cloudflare)
-                   │   ├─ Flux CD v2         (GitOps → k8s/clusters/dyson/)
-                   │   └─ app (Fasi 2-4)
-                   └─ systemd timer rclone   (backup → R2, in pausa)
+                   ├─ Technitium DNS         (servizio NixOS, porta 53)
+                   ├─ k3s                    (servizio NixOS, porta 6443)
+                   ├─ beszel-agent           (servizio NixOS, monitoraggio host)
+                   ├─ tailscaled             (servizio NixOS, mesh VPN, 41641/UDP)
+                    │   ├─ Traefik            (ingress 80/443, hostNetwork)
+                    │   ├─ cert-manager       (TLS ← Let's Encrypt via DNS-01 Cloudflare)
+                    │   ├─ Flux CD v2         (GitOps → k8s/clusters/dyson/)
+                    │   └─ app (Fasi 2-4)
+                    └─ systemd timer rclone   (backup → R2, in pausa)
 
   taiga  .43  ─  Raspberry Pi 4 (NixOS, satellite)
                   └─ Klipper + Moonraker + Mainsail   (stampante 3D)
@@ -107,8 +109,9 @@ astra/
 │   │   ├── backup.nix           systemd timer rclone → R2 (in pausa)
 │   │   ├── tailscale.nix        Tailscale mesh VPN, subnet router 192.168.178.0/24
 │   │   ├── beszel-agent.nix     Beszel agent host (monitoring risorse nebula)
-│   │   ├── dns-zone.lab.paroparo.it  zona BIND versionata in Git
-│   │   └── dns-blocklists.txt   blocklist Technitium (HaGeZi, Steven Black, AdGuard)
+│   │   └── dns/                 zone DNS e blocklist versionati in Git
+│   │       ├── dns-zone.lab.paroparo.it  zona BIND importabile in Technitium
+│   │       └── dns-blocklists.txt   blocklist Technitium (HaGeZi, Steven Black, AdGuard)
 │   ├── taiga/                   Raspberry Pi 4 (Klipper + Moonraker + Mainsail)
 │   └── installer/               ISO NixOS headless per nixos-anywhere
 │       └── default.nix          SSH, IP statico, chiave workstation

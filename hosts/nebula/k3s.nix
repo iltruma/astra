@@ -1,3 +1,4 @@
+# k3s server + Flux bootstrap manifests
 { config, lib, pkgs, ... }:
 
 {
@@ -13,11 +14,8 @@
     ];
 
     # Override del ConfigMap bundled: delega a Technitium per lab.paroparo.it.
-    # services.k3s.manifests piazza il file in /var/lib/rancher/k3s/server/manifests/
-    # e lo applica al boot; il nome "coredns" è richiesto da k3s.
-    # Kustomization "dyson" (root): dice a Flux di applicare tutti i Kustomization
-    # che trova in k8s/clusters/dyson/ del repo (infrastructure, apps, ...).
-    # Senza questo, Flux clona il repo ma non sa cosa applicare.
+    # Il nome "coredns" è richiesto da k3s (sovrascrive il ConfigMap built-in).
+    # Kustomization "dyson": senza questo Flux clona il repo ma non sa cosa applicare.
     manifests."flux-cluster-kustomization" = {
       content = {
         apiVersion = "kustomize.toolkit.fluxcd.io/v1";
@@ -37,10 +35,8 @@
         };
       };
     };
-    # GitRepository flux-system: punta al repo GitHub che ospita i Kustomization.
-    # Al primo boot fallirà con "no CRD for GitRepository" perché Flux non è ancora
-    # installato; k3s ritenta automaticamente dopo che il HelmChart qui sotto ha
-    # installato Flux + CRD.
+    # Al primo boot fallirà con "no CRD for GitRepository" (Flux non ancora installato);
+    # k3s riprova automaticamente dopo che flux-helmchart ha installato le CRD.
     manifests."flux-git-repository" = {
       content = {
         apiVersion = "source.toolkit.fluxcd.io/v1";
@@ -57,9 +53,8 @@
         };
       };
     };
-    # HelmChart Flux: il k3s Helm controller (built-in) installa il chart flux2
-    # della community Flux. Dopo l'install, le 4 CRD Flux sono attive e i
-    # Kustomization in k8s/clusters/dyson/ possono essere applicati.
+    # HelmChart: il controller k3s built-in installa flux2; dopo l'install le CRD Flux
+    # sono attive e i manifest flux-git-repository e flux-cluster-kustomization vengono applicati.
     manifests."flux-helmchart" = {
       content = {
         apiVersion = "helm.cattle.io/v1";
@@ -73,9 +68,9 @@
         };
       };
     };
-    # Namespace flux-system: k3s non crea namespace implicitamente quando applica
-    # i manifest in server/manifests/, quindi va materializzato prima dei Secret.
-    # Naming: "flux-namespace" < "flux-secret-*" (n < s) → ordine lessicale garantito.
+    # Namespace esplicito: k3s non crea namespace implicitamente dai manifest.
+    # Nome "flux-namespace" < "flux-secret-*" → ordine lessicale garantisce che il
+    # namespace esista prima dei Secret.
     manifests."flux-namespace" = {
       content = {
         apiVersion = "v1";
@@ -136,7 +131,7 @@
     "L+ /var/lib/rancher/k3s/server/manifests/flux-secret-sops-age.yaml - - - - /run/secrets/k3s/flux-sops-age"
   ];
 
-  networking.firewall.allowedTCPPorts = [ 10250 ]; # kubelet API
+  networking.firewall.allowedTCPPorts = [ 10250 ]; # kubelet API (richiesto da k3s metrics)
 
   environment.systemPackages = with pkgs; [ k3s fluxcd];
 }

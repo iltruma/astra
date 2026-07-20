@@ -1,3 +1,4 @@
+# Headless NixOS installer ISO for nixos-anywhere bootstrap
 { modulesPath, lib, ... }:
 
 {

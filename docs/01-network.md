@@ -15,6 +15,8 @@ Internet
      ├── 192.168.178.2   nebula   NixOS baremetal
      │                            ├─ Technitium DNS (servizio, :53)
      │                            ├─ k3s API (servizio, :6443)
+     │                            ├─ beszel-agent (servizio, monitoraggio host)
+     │                            ├─ tailscaled (servizio, mesh VPN, :41641/UDP)
      │                            └─ Traefik ingress (:80, :443)
      │
      └── 192.168.178.x   Altri dispositivi (DHCP dal router)
@@ -65,10 +67,10 @@ networking.firewall = {
     80    # HTTP (Traefik)
     443   # HTTPS (Traefik)
     6443  # k3s API (LAN only)
-    10250 # kubelet metrics
   ];
   allowedUDPPorts = [
     53    # DNS (Technitium)
+    # 41641 Tailscale WireGuard — aggiunto da hosts/nebula/tailscale.nix
   ];
 };
 ```
@@ -82,13 +84,15 @@ networking.firewall = {
 | 80/tcp | Traefik HTTP (redirect → HTTPS) | LAN |
 | 443/tcp | Traefik HTTPS | LAN |
 | 6443/tcp | k3s API server | LAN (workstation) |
-| 10250/tcp | kubelet metrics | localhost (k3s interno) |
+| 41641/udp | Tailscale WireGuard (da `tailscale.nix`) | Internet/LAN |
 
 **Porte chiuse** (perché non servono o non devono essere esposte):
 - 8006 (Proxmox UI): non c'è più Proxmox
 - 5380/53443 (Technitium web UI): solo localhost, accesso via SSH tunnel
 - 53 da Internet: il firewall del Fritz!Box blocca già, ma per sicurezza NixOS
   non espone nulla fuori dalla LAN
+- 10250 (kubelet metrics): non aperta — k3s non richiede questa porta esposta
+  su single-node
 
 ## DNS ricorsivo
 
