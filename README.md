@@ -28,6 +28,14 @@ e la mappa doc ([docs/README.md](docs/README.md)).
 
 L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
 
+## TL;DR per il maintainer
+
+- **Host**: `nebula` (NixOS 25.11, 192.168.178.2) — applica con `nixos-rebuild switch --flake .#nebula --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo`
+- **Stato servizi runtime** (canonico): [AGENTS.md §Servizi](AGENTS.md#servizi-stato-corrente)
+- **Piano sprint / DoD**: [docs/roadmap.md](docs/roadmap.md)
+- **Schema rete / dominio**: [docs/01-network.md](docs/01-network.md)
+- **Decisioni architetturali**: [docs/stack-decisions.md](docs/stack-decisions.md)
+
 ---
 
 ## Stack
@@ -142,16 +150,7 @@ astra/
 
 ## Fasi
 
-| # | Fase                            | Stato  | Sprint chiave                                |
-|---|---------------------------------|--------|----------------------------------------------|
-| 1 | Backbone                        | 🟢     | S0 Technitium DNS, S2 k3s+Flannel, S3 cert-manager, S4 Flux CD, S5 SOPS + age, S6 backup (in pausa) |
-| 2 | Accesso & osservabilità         | 🟢     | S10 Uptime Kuma, S11 Homepage, S12b Beszel, S15b Tailscale (accesso remoto); S12 Cloudflare Tunnel rimosso |
-| 3 | App tue                         | 🔴     | S13 — da pianificare                          |
-| 4 | Media                           | 🔴     | S15 Jellyfin, S16 download stack, S17 Jellyseerr (storage: ZFS `tank/media` hostPath) |
-| 5 | Rete avanzata (VLAN)            | 🔴     | S18 — richiede switch managed                |
-
-DoD di ogni sprint, decisioni architetturali e storia: vedi
-[`docs/roadmap.md`](docs/roadmap.md).
+Piano completo per fasi e sprint (con DoD, stato, dipendenze) → [`docs/roadmap.md`](docs/roadmap.md).
 
 ---
 
@@ -180,13 +179,7 @@ nix run github:nix-community/disko -- --mode disko hosts/nebula/disko.nix
 nixos-install --flake .#nebula
 reboot
 
-# 5. Applica update da remoto (da workstation)
-# Workstation NixOS:
-nixos-rebuild switch --flake .#nebula \
-  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
-# Workstation WSL/macOS:
-nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
-  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
+# 5. Applica update da remoto (comando canonico: vedi [AGENTS.md §Comandi](AGENTS.md#comandi-utili))
 
 # 6. Kubernetes
 ssh cosimo@192.168.178.2
