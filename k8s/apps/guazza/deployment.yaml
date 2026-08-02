@@ -47,9 +47,6 @@ spec:
             requests:
               cpu: 10m
               memory: 64Mi
-            limits:
-              cpu: 100m
-              memory: 128Mi
           # securityContext non necessario: l'immagine gira già come utente non-root guazza.
       volumes:
         - name: data

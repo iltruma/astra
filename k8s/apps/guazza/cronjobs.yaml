@@ -41,9 +41,6 @@ spec:
                 requests:
                   cpu: 50m
                   memory: 128Mi
-                limits:
-                  cpu: 500m
-                  memory: 512Mi
           volumes:
             - name: data
               persistentVolumeClaim:
@@ -89,9 +86,6 @@ spec:
                 requests:
                   cpu: 50m
                   memory: 128Mi
-                limits:
-                  cpu: 500m
-                  memory: 512Mi
           volumes:
             - name: data
               persistentVolumeClaim:
@@ -136,9 +130,6 @@ spec:
                 requests:
                   cpu: 100m
                   memory: 256Mi
-                limits:
-                  cpu: 1000m
-                  memory: 1Gi
           volumes:
             - name: data
               persistentVolumeClaim:
@@ -183,9 +174,6 @@ spec:
                 requests:
                   cpu: 100m
                   memory: 256Mi
-                limits:
-                  cpu: 1000m
-                  memory: 1Gi
           volumes:
             - name: data
               persistentVolumeClaim:
@@ -231,9 +219,6 @@ spec:
                 requests:
                   cpu: 50m
                   memory: 128Mi
-                limits:
-                  cpu: 500m
-                  memory: 512Mi
           volumes:
             - name: data
               persistentVolumeClaim:
