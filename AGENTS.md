@@ -179,7 +179,8 @@ refactor struttura repo).
 **Override di questo repo:**
 
 - **Lingua messaggio: italiano** (codice e documentazione in inglese, messaggi di commit in italiano)
-- **Conferma obbligatoria**: non committare in autonomia; proporre, attendere ok
+- **Commit**: l'agente può committare dopo aver proposto (messaggio + stat). Nessuna
+  attesa di conferma esplicita per il commit stesso.
 - **Push**: mai dall'agente
 - **Hook fail**: niente `--no-verify`; stop + mostra errore
 
