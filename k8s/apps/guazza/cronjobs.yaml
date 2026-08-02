@@ -97,8 +97,8 @@ metadata:
   name: guazza-train
   namespace: guazza
 spec:
-  # Retraining LightGBM mensile (1° del mese 02:00 UTC — README: "on-demand o mensile")
-  schedule: "0 2 1 * *"
+  # Retraining LightGBM settimanale (domenica 02:00 UTC)
+  schedule: "0 2 * * 0"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
