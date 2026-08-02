@@ -17,7 +17,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-ingest
-              image: ghcr.io/iltruma/guazza:v0.12.5
+              image: ghcr.io/iltruma/guazza:v0.12.6
               imagePullPolicy: IfNotPresent
               command: ["guazza-ingest", "realtime"]
               env:
@@ -62,7 +62,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-pipeline
-              image: ghcr.io/iltruma/guazza:v0.12.5
+              image: ghcr.io/iltruma/guazza:v0.12.6
               imagePullPolicy: IfNotPresent
               command: ["guazza-pipeline", "run"]
               env:
@@ -108,7 +108,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-train
-              image: ghcr.io/iltruma/guazza:v0.12.5
+              image: ghcr.io/iltruma/guazza:v0.12.6
               imagePullPolicy: IfNotPresent
               command: ["guazza-train", "run"]
               env:
@@ -152,7 +152,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-skill
-              image: ghcr.io/iltruma/guazza:v0.12.5
+              image: ghcr.io/iltruma/guazza:v0.12.6
               imagePullPolicy: IfNotPresent
               command: ["guazza-skill"]
               env:
@@ -195,7 +195,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-ingest
-              image: ghcr.io/iltruma/guazza:v0.12.5
+              image: ghcr.io/iltruma/guazza:v0.12.6
               imagePullPolicy: IfNotPresent
               command: ["guazza-ingest", "daily"]
               env:
