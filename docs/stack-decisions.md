@@ -30,98 +30,25 @@ alternative scartate e rischio a lungo termine. Ogni decisione ha uno stato:
 
 ## D1 — Flannel (bundled k3s)
 
-### Problema
+**Problema**: bootstrap Cilium su NixOS fragile (chicken-and-egg pre-CNI, plugin path non standard, servizio systemd custom one-shot).
 
-Il bootstrap Cilium su NixOS era fragile per tre ragioni:
-1. **Chicken-and-egg**: k3s parte con Flannel disabilitato (`--flannel-backend=none`),
-   ma senza CNI l'API server non è operativo e helmfile non può eseguire.
-2. **helm-diff plugin**: il path del plugin non era standard in NixOS (store Nix),
-   richiedeva workaround con `HELM_PLUGINS` env var nel servizio systemd.
-3. **Servizio systemd custom** (`k3s-cilium-bootstrap`): un servizio one-shot
-   fragile, difficile da debuggare se falliva in silenzio.
+**Scelta**: Flannel bundled k3s. Default, zero bootstrap esterno, sufficiente su single-node (routing L3, niente NetworkPolicy avanzate).
 
-### Scelta: Flannel (CNI bundled)
+**Futuro**: Cilium aggiungibile via Flux `HelmRelease` quando il cluster è stabile.
 
-k3s ha Flannel integrato di default. Non richiede bootstrap esterno, niente
-dipendenze aggiuntive, niente servizi systemd custom.
-
-Su astra (single-node) Flannel è più che sufficiente: routing L3 tra pod,
-niente eBPF/NetworkPolicy avanzate necessarie.
-
-### Alternative future
-
-Cilium può essere aggiunto via Flux `HelmRelease` in futuro quando il cluster
-è stabile, senza dipendere da un bootstrap pre-CNI. In quel caso il pattern
-helmfile non è necessario perché Flannel fornisce già rete funzionante durante
-l'installazione di Cilium.
-
-### Rischio a lungo termine
-
-🟢 Basso — Flannel è il CNI di default di k3s, ampiamente testato su
-single-node.
+**Rischio**: 🟢 basso.
 
 ---
 
 ## D2 — CoreDNS bundled + ConfigMap custom
 
-### Problema
+**Problema**: split-horizon per `lab.paroparo.it` (forward a Technitium locale).
 
-k3s ha CoreDNS bundled di default. Per il split-horizon (query `.lan` →
-Technitium locale), serve un override del Corefile.
+**Scelta**: ConfigMap `coredns` in `hosts/nebula/k3s.nix` → `manifests."coredns-custom"`. k3s applica manifest con prefisso `00-` prima del CoreDNS bundled, sovrascrive il Corefile di default (split-horizon via `forward . 192.168.178.2:53`).
 
-### Scelta: ConfigMap `coredns` in `/var/lib/rancher/k3s/server/manifests/`
+**Vantaggi**: zero helm chart, config versionata nel flake, idempotente al boot.
 
-k3s applica automaticamente i manifest con prefisso `00-` PRIMA del suo
-CoreDNS bundled. Il ConfigMap deve avere `name: coredns` (nome esatto che
-k3s sovrascrive) per fare override del Corefile di default.
-
-Config in `hosts/nebula/k3s.nix`:
-```nix
-manifests."coredns-custom" = {
-  content = {
-    apiVersion = "v1";
-    kind = "ConfigMap";
-    metadata = {
-      name = "coredns";
-      namespace = "kube-system";
-    };
-    data.Corefile = ''
-      .:53 {
-          errors
-          health
-          ready
-          kubernetes cluster.local in-addr.arpa ip6.arpa {
-            pods insecure
-            fallthrough in-addr.arpa ip6.arpa
-          }
-          forward . 192.168.178.2:53
-          cache 30
-          loop
-          reload
-          loadbalance
-      }
-      lab.paroparo.it:53 {
-          errors
-          cache 30
-          forward . 192.168.178.2:53
-      }
-    '';
-  };
-};
-```
-
-k3s applica il manifest al boot (prefisso `00-` rispetto al CoreDNS bundled,
-che lo riconosce e usa il Corefile custom).
-
-### Vantaggi
-
-- Zero helm chart per CoreDNS
-- Config versionata nel flake
-- k3s lo applica al boot, idempotente
-
-### Rischio a lungo termine
-
-🟢 Basso — pattern documentato da k3s upstream.
+**Rischio**: 🟢 basso.
 
 ---
 
@@ -148,31 +75,13 @@ disponibile. PV k3s vivono in `tank/volumes` (ZFS dataset).
 
 ## D4 — ArgoCD → Flux CD v2
 
-### Problema
+**Problema**: ArgoCD ha ~500 MB RAM idle, drift via UI, SOPS via plugin esterno.
 
-ArgoCD ha tre criticità per una fleet GitOps-pura single-developer:
-1. **RAM**: ~500 MB idle (API server + Redis + Dex + controller)
-2. **Drift via UI**: la dashboard permette click-ops che bypassano Git
-3. **SOPS**: richiede plugin esterno (argocd-vault-plugin)
+**Scelta**: Flux CD v2 (CNCF Graduated). SOPS nativo (kustomize-controller), Helm SDK nativo, retry fino a convergenza.
 
-### Scelta: Flux CD v2
+**Trade-off accettato**: niente web UI, solo CLI (`flux get all`, `kubectl describe kustomization`, `flux logs`).
 
-| Metrica           | ArgoCD                            | Flux CD v2                        |
-|-------------------|-----------------------------------|-----------------------------------|
-| RAM idle          | ~500 MB                           | ~200 MB                           |
-| SOPS support      | plugin esterno                    | **nativo** (kustomize-controller) |
-| Helm SDK          | `helm template` interno           | **native Helm SDK** (`helm list`) |
-| Sync failure      | Si ferma e aspetta                | **Riprova fino a convergenza**    |
-| Web UI            | ✅ integrata                      | ❌ solo CLI (`flux`)              |
-
-### Trade-off accettato
-
-Nessuna web UI nativa. Per debug: `flux get all`, `kubectl describe kustomization`,
-`flux logs`. Per una fleet single-developer la CLI è sufficiente.
-
-### Rischio a lungo termine
-
-🟢 Basso — CNCF Graduated, adottato in molti ambienti enterprise.
+**Rischio**: 🟢 basso.
 
 ---
 
@@ -209,32 +118,11 @@ services.k3s.extraFlags = toString [
 
 ## D6 — Sealed Secrets → SOPS + age (unificato)
 
-### Problema
+**Problema**: due toolchain secrets (Sealed Secrets per k8s, Ansible Vault per host). Due modi per cifrare, due punti di rottura.
 
-Due toolchain secrets nel vecchio setup:
-- Sealed Secrets per k8s (controller in cluster, chiave in `kube-system`)
-- Ansible Vault per Ansible (cifrato simmetrico, password condivisa)
+**Scelta**: SOPS + age ovunque. Stessa chiave age in `.sops.yaml`. `secrets/*.enc.yaml` → sops-nix per host (mount `/run/secrets/`); `k8s/**/*.enc.yaml` → Flux kustomize-controller per k8s (Secret resource). PR diff leggibile (chiavi visibili, valori cifrati).
 
-Due modi per cifrare, due modi per decifrare, due punti di rottura.
-
-### Scelta: SOPS + age ovunque
-
-| Aspetto | Sealed Secrets | SOPS + age (vecchio) | SOPS + age (nuovo) |
-|---------|---------------|---------------------|--------------------|
-| Dove vive la chiave | Controller in `kube-system` | File locale + Secret k8s | File locale + Secret k8s (unificato) |
-| Reinstall cluster | ❌ secret irrecuperabili | ✅ ricrei il Secret | ✅ ricrei il Secret |
-| Host secrets | n/a (solo k8s) | ❌ Ansible Vault separato | ✅ `secrets/*.enc.yaml` con sops-nix |
-| PR diff | Base64 illeggibile | Chiavi visibili, valori cifrati | Chiavi visibili, valori cifrati |
-| Tools | `kubeseal` | `sops` + `kubectl` | `sops` + `sops-nix` + Flux |
-
-Nel nuovo setup:
-- `secrets/*.enc.yaml` → sops-nix (host secrets, mount in `/run/secrets/`)
-- `k8s/**/*.enc.yaml` → Flux kustomize-controller (k8s secrets, Secret resource)
-- Stessa chiave age in `.sops.yaml`
-
-### Rischio a lungo termine
-
-🟢 Basso — SOPS è maturo (2016), sotto [getsops org](https://github.com/getsops/sops).
+**Rischio**: 🟢 basso — SOPS maturo (2016), [getsops org](https://github.com/getsops/sops).
 
 ---
 
