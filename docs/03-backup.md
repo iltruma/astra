@@ -7,6 +7,9 @@
 > - Il modulo termina con `#MESSO ON HOLD FINO A NUOVA IDEA` in cima al file
 > - Il timer systemd `rclone-backup.timer` non è attivo
 >
+> Per lo **stato corrente canonico** del servizio (single source of truth) vedi
+> [AGENTS.md §Servizi](../AGENTS.md#servizi-stato-corrente).
+>
 > Tutto il contenuto di questo doc resta come **riferimento per quando il setup
 > verrà ripreso**. Non riflette uno stato attivo.
 
