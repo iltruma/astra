@@ -81,6 +81,94 @@ spec:
                   mountPath: /var/lib/guazza
               resources:
                 requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: guazza-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: guazza-train
+  namespace: guazza
+spec:
+  # Retraining LightGBM settimanale (domenica 02:00 UTC, come da crontab.template FUTURI)
+  schedule: "0 2 * * 0"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: guazza-train
+              image: ghcr.io/iltruma/guazza:v0.12.4
+              imagePullPolicy: IfNotPresent
+              command: ["guazza-train", "run"]
+              env:
+                - name: DB_PATH
+                  value: /var/lib/guazza/guazza.duckdb
+                - name: MODEL_DIR
+                  value: /var/lib/guazza/models
+                - name: OUTPUT_DIR
+                  value: /var/lib/guazza/output
+              envFrom:
+                - secretRef:
+                    name: healthchecks-url
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/guazza
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 1000m
+                  memory: 1Gi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: guazza-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: guazza-skill
+  namespace: guazza
+spec:
+  # Curva skill settimanale (domenica 03:00 UTC, dopo train run — scrive output/skill.json usato dal frontend)
+  schedule: "0 3 * * 0"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: guazza-skill
+              image: ghcr.io/iltruma/guazza:v0.12.4
+              imagePullPolicy: IfNotPresent
+              command: ["guazza-skill"]
+              env:
+                - name: DB_PATH
+                  value: /var/lib/guazza/guazza.duckdb
+                - name: MODEL_DIR
+                  value: /var/lib/guazza/models
+                - name: OUTPUT_DIR
+                  value: /var/lib/guazza/output
+              envFrom:
+                - secretRef:
+                    name: healthchecks-url
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/guazza
+              resources:
+                requests:
                   cpu: 100m
                   memory: 256Mi
                 limits:
