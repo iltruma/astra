@@ -183,11 +183,5 @@ servizio vedi la doc specifica in `docs/0N-*.md`.
 
 ## Network
 
-- Iris (gateway/router Fritz!Box): 192.168.178.1
-- Nebula (NixOS host): 192.168.178.2
-  - Servizi esposti: k3s API (.6443), DNS (.53), HTTP (.80), HTTPS (.443)
-  - k3s gira come servizio sullo stesso host (no VM separata)
-  - Technitium DNS gira come servizio NixOS (no LXC separato)
-- Dominio: `lab.paroparo.it` (record locali in Technitium; host + servizi web via
-  wildcard `*.lab.paroparo.it` → Traefik in k3s; TLS Let's Encrypt).
-  Niente `.internal`.
+Schema rete canonico (topologia, IP, bridge, firewall, dominio, VLAN target)
+→ [docs/01-network.md](docs/01-network.md).
