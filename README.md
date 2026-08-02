@@ -45,35 +45,20 @@ L'indice completo dei doc è in **[docs/README.md](docs/README.md)**.
 | Ingress            | Traefik (HelmRelease Flux in k3s)                       |
 | TLS                | cert-manager + Let's Encrypt (DNS-01 Cloudflare)        |
 | DNS interno        | Technitium DNS (servizio NixOS nativo, split-horizon)   |
-| Backup             | rclone → Cloudflare R2 (in pausa: `hosts/nebula/backup.nix` commentato in `default.nix`, vedi [docs/03-backup.md](docs/03-backup.md)) |
+| Backup             | rclone → Cloudflare R2 (stato corrente: vedi [AGENTS.md §Servizi](AGENTS.md#servizi-stato-corrente)) |
 
 ---
 
 ## Architettura
 
-```
-                   rete 192.168.178.0/24
-  iris     .1  ─  Router Fritz!Box         (gateway)
-  nebula  .2  ─  NixOS baremetal (nodo principale)
-                   ├─ Technitium DNS         (servizio NixOS, porta 53)
-                   ├─ k3s                    (servizio NixOS, porta 6443)
-                   ├─ beszel-agent           (servizio NixOS, monitoraggio host)
-                   ├─ tailscaled             (servizio NixOS, mesh VPN, 41641/UDP)
-                    │   ├─ Traefik            (ingress 80/443, hostNetwork)
-                    │   ├─ cert-manager       (TLS ← Let's Encrypt via DNS-01 Cloudflare)
-                    │   ├─ Flux CD v2         (GitOps → k8s/clusters/dyson/)
-                    │   └─ app (Fasi 2-4)
-                    └─ systemd timer rclone   (backup → R2, in pausa)
+Schema rete canonico (ASCII, bridge, firewall, VLAN target) →
+[`docs/01-network.md`](docs/01-network.md).
 
-  taiga  .43  ─  Raspberry Pi 4 (NixOS, satellite)
-                  └─ Klipper + Moonraker + Mainsail   (stampante 3D)
-```
+Per la struttura dei manifesti k8s (cluster `dyson`, `infra/`, `apps/`) vedi
+[`k8s/README.md`](k8s/README.md).
 
 Dominio: **`lab.paroparo.it`** (record locali in Technitium, wildcard
 `*.lab.paroparo.it → 192.168.178.2`, TLS valido via Let's Encrypt wildcard).
-
-Per il setup completo dei servizi k3s vedi
-[`k8s/README.md`](k8s/README.md).
 
 ---
 

@@ -13,12 +13,8 @@ si passa al successivo. Le dipendenze determinano l'ordine.
 
 ## Convenzioni di rete
 
-| Host       | Ruolo                      | Tipo | IP            |
-|------------|----------------------------|------|---------------|
-| `iris`     | Router Fritz!Box (gateway) | hw   | 192.168.178.1 |
-| `nebula`  | NixOS baremetal + k3s      | host | 192.168.178.2 |
-| `dyson`      | Cluster k3s (single-node)  | servizio sullo stesso host | 192.168.178.2:6443 (k3s API) |
-| `sentinel` | Technitium DNS             | servizio NixOS | 192.168.178.2:53 |
+Schema rete canonico (topologia, IP, bridge, firewall, VLAN target) →
+[`01-network.md`](01-network.md).
 
 > **Cambiamento post-migrazione**: `dyson` e `sentinel` non sono più VM/LXC
 > separati, ma servizi NixOS sullo stesso host `nebula`. L'IP `.2` espone
@@ -118,6 +114,9 @@ L'ossatura della fleet. Va completata in ordine perché ogni pezzo sblocca i suc
   (nixos-install + Flux sync). I dati applicativi vengono sincronizzati
   su **Cloudflare R2** via `rclone` con systemd timer notturno
   (`hosts/nebula/backup.nix`). Retention 7 giorni.
+- **Stato runtime**: servizio in pausa dal 2026-07-19 (per stato corrente
+  canonico vedi [AGENTS.md §Servizi](AGENTS.md#servizi-stato-corrente);
+  procedura di riattivazione in [03-backup.md](03-backup.md)).
 - DoD: `rclone ls r2:nebula-backup/` mostra file; `journalctl -u rclone-backup`
   pulito; la strategia di restore da zero è documentata in [03-backup.md](03-backup.md).
 
