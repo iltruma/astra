@@ -19,6 +19,9 @@ spec:
         - name: guazza-web
           image: ghcr.io/iltruma/guazza:v0.12.4
           imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: Europe/Rome
           ports:
             - name: http
               containerPort: 8080

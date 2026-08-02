@@ -8,6 +8,7 @@ metadata:
   namespace: guazza
 spec:
   schedule: "2,17,32,47 * * * *"
+  timeZone: Europe/Rome
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -20,6 +21,8 @@ spec:
               imagePullPolicy: IfNotPresent
               command: ["guazza-ingest", "realtime"]
               env:
+                - name: TZ
+                  value: Europe/Rome
                 - name: DB_PATH
                   value: /var/lib/guazza/guazza.duckdb
                 - name: MODEL_DIR
@@ -53,6 +56,7 @@ metadata:
   namespace: guazza
 spec:
   schedule: "10 2,8,14,20 * * *"
+  timeZone: Europe/Rome
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -65,6 +69,8 @@ spec:
               imagePullPolicy: IfNotPresent
               command: ["guazza-pipeline", "run"]
               env:
+                - name: TZ
+                  value: Europe/Rome
                 - name: DB_PATH
                   value: /var/lib/guazza/guazza.duckdb
                 - name: MODEL_DIR
@@ -97,8 +103,9 @@ metadata:
   name: guazza-train
   namespace: guazza
 spec:
-  # Retraining LightGBM settimanale (domenica 02:00 UTC)
+  # Retraining LightGBM settimanale (domenica 02:00 Europe/Rome)
   schedule: "0 2 * * 0"
+  timeZone: Europe/Rome
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -111,6 +118,8 @@ spec:
               imagePullPolicy: IfNotPresent
               command: ["guazza-train", "run"]
               env:
+                - name: TZ
+                  value: Europe/Rome
                 - name: DB_PATH
                   value: /var/lib/guazza/guazza.duckdb
                 - name: MODEL_DIR
@@ -141,8 +150,9 @@ metadata:
   name: guazza-skill
   namespace: guazza
 spec:
-  # Curva skill settimanale (domenica 03:00 UTC, dopo train run — scrive output/skill.json usato dal frontend)
+  # Curva skill settimanale (domenica 03:00 Europe/Rome, dopo train run — scrive output/skill.json usato dal frontend)
   schedule: "0 3 * * 0"
+  timeZone: Europe/Rome
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -155,6 +165,8 @@ spec:
               imagePullPolicy: IfNotPresent
               command: ["guazza-skill"]
               env:
+                - name: TZ
+                  value: Europe/Rome
                 - name: DB_PATH
                   value: /var/lib/guazza/guazza.duckdb
                 - name: MODEL_DIR
@@ -186,6 +198,7 @@ metadata:
   namespace: guazza
 spec:
   schedule: "0 6 * * *"
+  timeZone: Europe/Rome
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -198,6 +211,8 @@ spec:
               imagePullPolicy: IfNotPresent
               command: ["guazza-ingest", "daily"]
               env:
+                - name: TZ
+                  value: Europe/Rome
                 - name: DB_PATH
                   value: /var/lib/guazza/guazza.duckdb
                 - name: MODEL_DIR
