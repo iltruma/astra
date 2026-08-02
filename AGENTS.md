@@ -64,18 +64,8 @@ DNS come servizio NixOS nativo.
 
 ## Stack
 
-- **OS host**: NixOS 25.11 (baremetal, no Proxmox)
-- **File system**: ZFS (Disko per partizionamento dichiarativo)
-- **IaC**: flake NixOS (Nix language, unica fonte di verità)
-- **Config Management**: moduli NixOS + nixos-rebuild
-- **Container Orchestration**: k3s (single-node, servizio host)
-- **CNI**: Flannel (bundled k3s, default)
-- **CI/CD**: GitHub Actions + Flux CD v2 (GitOps)
-- **Secrets**: SOPS + age (sops-nix per host, Flux SOPS per k8s)
-- **DNS**: Technitium DNS (modulo NixOS nativo)
-- **Ingress**: Traefik (HelmRelease Flux in k8s)
-- **TLS**: Let's Encrypt (DNS-01 Cloudflare) + cert-manager
-- **Backup**: rclone → Cloudflare R2 (systemd timer, **in pausa** dal 2026-07-19: `hosts/nebula/backup.nix` commentato in `default.nix`)
+Vedi [README.md §Stack](../README.md#stack) per la tabella canonica completa
+(11 voci). Motivazioni e tradeoff in [docs/stack-decisions.md](docs/stack-decisions.md).
 
 ## Struttura
 
@@ -149,6 +139,47 @@ docs: add nixos migration guide
 
 Lo scope è opzionale per modifiche trasversali (es. rinomina globale,
 refactor struttura repo).
+
+## Procedure di sync (matrice evento → write primario)
+
+**Regola anti-fanout** (la più importante): ogni informazione ha **un solo file canonico**.
+Gli altri file rimandano, non duplicano.
+
+- **Stack tecnologico** → canonico in `README.md` §Stack
+- **Schema rete / architettura** → canonico in `docs/01-network.md`
+- **Stato servizi host** (incluso "backup in pausa") → canonico in `AGENTS.md` §Servizi
+- **Decisioni architetturali** → canonico in `docs/stack-decisions.md`
+- **Piano / sprint** → canonico in `docs/roadmap.md`
+- **Argomenti operativi** → canonico in `docs/0N-*.md` (uno per argomento)
+- **Regole agenti** → canonico in `AGENTS.md`
+
+| Evento | Obbligatorio | Condizionale (solo se…) |
+|---|---|---|
+| Modifica NixOS (`flake.nix`/`hosts/`/`modules/`) | i file NixOS toccati | `docs/0N-*.md` se cambia procedura operativa; `stack-decisions.md` se nuova scelta architetturale |
+| Modifica manifest k8s | `k8s/` file toccati | `roadmap.md` se chiude/aggiunge sprint; `0N-*.md` se cambia procedura |
+| Sprint completato | `roadmap.md` (riga sprint → ✅) | `README.md` §Fasi + `docs/README.md` mappa doc; `0N-*.md` se la doc Sprint era il DoD |
+| Nuova decisione architetturale | append `D-NNN` in `stack-decisions.md` | `AGENTS.md` §Stack solo se cambia invariante stack |
+| Toggle backup (pausa/riprendi) | `AGENTS.md` §Servizi + `docs/03-backup.md` | `README.md` §Stack se cambia layer Backup; `roadmap.md` S6 |
+| Rotazione secret | `docs/06-secrets-sops.md` (procedura) | `secrets/*.enc.yaml` aggiornato (conferma obbligatoria) |
+| Nuovo argomento doc | `docs/0N-*.md` + `docs/README.md` (indice) | `AGENTS.md` se cambia modalità di lavoro |
+| doc-only | il file toccato | niente altro |
+
+**Anti-pattern**: NON aggiornare `README.md` salvo trigger esplicito (cambia
+quickstart / stack / architettura). NON duplicare una tabella in due file.
+
+## Servizi (stato corrente)
+
+Stato runtime dei servizi host `nebula`. Per i dettagli operativi di ogni
+servizio vedi la doc specifica in `docs/0N-*.md`.
+
+- **Technitium DNS** — attivo (`hosts/nebula/technitium.nix`)
+- **k3s** — attivo (`hosts/nebula/k3s.nix`)
+- **Flux CD** — attivo, sync ~10min (`k8s/clusters/dyson/`)
+- **cert-manager + Traefik** — attivi, TLS wildcard Let's Encrypt
+- **SOPS + age** — attivo, secret host e k8s cifrati
+- **Tailscale** — attivo, subnet router 192.168.178.0/24 (S15b)
+- **Beszel agent** — attivo, monitoring host (`hosts/nebula/beszel-agent.nix`)
+- **Backup rclone → R2** — ⏸️ **in pausa** dal 2026-07-19, `hosts/nebula/backup.nix` commentato in `default.nix` (vedi `docs/03-backup.md` per procedura di riattivazione)
 
 ## Network
 
