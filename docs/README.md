@@ -42,7 +42,7 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 - **Fase 0 — Migrazione NixOS** (completata): [00](00-nixos-installation.md)
 - **Fase 1 — Backbone** (Kubernetes + DNS + backup): [01](01-network.md) · [04](04-dns-technitium.md) · [05](05-tls.md) · [06](06-secrets-sops.md) · [07](07-gitops.md)
 - **Fase 2 — Accesso & osservabilità** (Uptime Kuma, Beszel, Tailscale attivi): [08](08-monitoring.md) + [roadmap S15b](roadmap.md)
-- **Fase 3 — App tue**: nessun doc ancora
+- **Fase 3 — App tue** (S13 🟢 — guazza su k3s via Flux, `guazza.lab.paroparo.it`): [07](07-gitops.md) + [roadmap S13](roadmap.md)
 - **Fase 4 — Media**: [02](02-storage.md) (storage prerequisito)
 - **Fase 5 — Rete avanzata (VLAN)**: [01](01-network.md) (Piano A firewall)
 
