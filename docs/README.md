@@ -61,31 +61,8 @@ Per capire *cosa* si sta facendo e *perché*, parti dalla
 
 ## Comandi rapidi
 
-```bash
-# Validare il flake
-nix flake check
+Comandi canonici (NixOS apply, k3s, Flux, servizi host) → vedi
+[AGENTS.md §Comandi](../AGENTS.md#comandi-utili) e
+[README.md §Quick start](../README.md#quick-start).
 
-# Applicare modifiche NixOS (da workstation)
-# Workstation NixOS:
-nixos-rebuild switch --flake .#nebula \
-  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
-# Workstation WSL/macOS:
-nix run nixpkgs#nixos-rebuild -- switch --flake .#nebula \
-  --target-host cosimo@192.168.178.2 --build-host localhost --use-remote-sudo
-
-# Stato k3s
-ssh cosimo@192.168.178.2
-sudo k3s kubectl get nodes
-sudo k3s kubectl get pods -A
-
-# Stato Flux
-sudo k3s flux get kustomizations
-k3s flux get helmreleases -A
-
-# Stato servizi host
-systemctl status technitium-dns-server
-systemctl status k3s
-systemctl status beszel-agent
-systemctl status tailscaled
-# systemctl list-timers rclone-backup.timer   # in pausa dal 2026-07-19
-```
+L'indice non è un runbook.
