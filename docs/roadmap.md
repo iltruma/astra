@@ -142,7 +142,7 @@ L'ossatura della fleet. Va completata in ordine perché ogni pezzo sblocca i suc
 
 | Sprint | Servizio | Note |
 |--------|----------|------|
-| S13    | Deploy app personale/i | una o più app proprie sul k3s, via Flux, con Ingress TLS dalla CA |
+| S13    | Deploy app personale/i | 🟢 | **guazza** v0.12.2 su k3s via Flux: `guazza.lab.paroparo.it` (Ingress TLS wildcard), PVC `local-path`, 3 CronJob (realtime 15min, pipeline 6h, daily, `concurrencyPolicy: Forbid`), secrets SOPS; `config/` bundle nell'immagine Docker (tag v0.12.1+). Pubblico `guazza.it` via Tailscale Funnel: da riportare su nebula (sprint separato). |
 | S13b   | Technitium DNS zone auto-import | `system.activationScripts` chiama API Technitium per importare `dns-zone.lab.paroparo.it` ad ogni rebuild. Richiede token API in sops. **Per ora**: import manuale via web UI al reinstall. |
 
 Obiettivo: usare tutto il backbone (GitOps + TLS + ingress) per pubblicare codice tuo.
