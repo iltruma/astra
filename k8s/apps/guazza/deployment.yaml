@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: guazza-web
-          image: ghcr.io/iltruma/guazza:v0.12.2
+          image: ghcr.io/iltruma/guazza:v0.12.3
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

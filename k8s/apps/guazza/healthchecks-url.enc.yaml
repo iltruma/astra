@@ -6,7 +6,7 @@ metadata:
     namespace: guazza
 type: Opaque
 stringData:
-    HEALTHCHECKS_URL: ENC[AES256_GCM,data:PCYw+VDSpHiAwL3YgXq1zputy/sB1A==,iv:kYrPijRzDlDwM+6UHdn/KDGutLYARd84XefSTgF303Q=,tag:id+Hxao2F0fvuSm/Tm94dg==,type:str]
+    HEALTHCHECKS_URL: ENC[AES256_GCM,data:Om4lz0QjoOQVXV0S4YL6qqcNUdaNWmGrROlTm5Ta,iv:lq9w1xDqSTvRunz9lS1/nespbfIT3foayOxNp1QqxCw=,tag:VPkWBBdAD6bUoBvhn2NASg==,type:str]
 sops:
     age:
         - enc: |
@@ -19,6 +19,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1xha4vvyd2593c9cx2qnnzsfw7l5enj2yncvk3d9j62gsp0ql6y0qzmt6g5
     encrypted_regex: ^(data|stringData)$
-    lastmodified: "2026-08-02T17:25:18Z"
-    mac: ENC[AES256_GCM,data:89AHiyhsoPRMGmfxqKLDDazRffqmHH9Xg8pYzNgTi9mn4fbUhZuDfm+NVaGoQSRyrTz0dP9F94TqBkFiFnJnWICOC7ccvJQtt1iuSxFARnZ4xezraI+RUSNTWEZ23FuRd0DmD6wYaL/C1Zp2qNeDvRXw5zopKy9NYRCqpdP3ITg=,iv:v1oEwxfmP0KcdY7nTosEZT+0/X/5P1v/woZlu8m6Pk0=,tag:DbntWBkM5kbar+NDiUb7ww==,type:str]
+    lastmodified: "2026-08-02T17:56:52Z"
+    mac: ENC[AES256_GCM,data:k9aMe1RFzzKAv6F386aY5j7YaAm6vTQf8AJOfQ6sPqz9R41+mK9cmt6HsJY9ROpYnnkPi4UpeDGFqVePYUXRyfrQBcwa2vg0Q/CP/fTP/D5mOsAog+SmwvVXTlmaYKDL4TOqWr9th8yCAL7ryeKT2BPT49dSoemXVi01R7lUYKg=,iv:s8SB9W0X6vVaSPxmw8hXGMtv00uCPkpXklaLI0p/dgM=,tag:4jQW7tVa6AQIo+ZsNQwRpA==,type:str]
     version: 3.13.1
