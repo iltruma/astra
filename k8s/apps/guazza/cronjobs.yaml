@@ -1,0 +1,137 @@
+# CronJob di guazza — ingestion e pipeline.
+# DuckDB è single-writer: concurrencyPolicy Forbid evita run sovrapposte.
+# Volume PVC guazza-data montato intero su /var/lib/guazza (job = unico scrittore).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: guazza-realtime
+  namespace: guazza
+spec:
+  schedule: "2,17,32,47 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: guazza-ingest
+              image: ghcr.io/iltruma/guazza:v0.12.1
+              imagePullPolicy: IfNotPresent
+              command: ["guazza-ingest", "realtime"]
+              env:
+                - name: DB_PATH
+                  value: /var/lib/guazza/guazza.duckdb
+                - name: MODEL_DIR
+                  value: /var/lib/guazza/models
+                - name: OUTPUT_DIR
+                  value: /var/lib/guazza/output
+              envFrom:
+                - secretRef:
+                    name: netatmo-credentials
+                - secretRef:
+                    name: healthchecks-url
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/guazza
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: guazza-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: guazza-pipeline
+  namespace: guazza
+spec:
+  schedule: "10 2,8,14,20 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: guazza-pipeline
+              image: ghcr.io/iltruma/guazza:v0.12.1
+              imagePullPolicy: IfNotPresent
+              command: ["guazza-pipeline", "run"]
+              env:
+                - name: DB_PATH
+                  value: /var/lib/guazza/guazza.duckdb
+                - name: MODEL_DIR
+                  value: /var/lib/guazza/models
+                - name: OUTPUT_DIR
+                  value: /var/lib/guazza/output
+              envFrom:
+                - secretRef:
+                    name: netatmo-credentials
+                - secretRef:
+                    name: healthchecks-url
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/guazza
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 1000m
+                  memory: 1Gi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: guazza-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: guazza-daily
+  namespace: guazza
+spec:
+  schedule: "0 6 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: guazza-ingest
+              image: ghcr.io/iltruma/guazza:v0.12.1
+              imagePullPolicy: IfNotPresent
+              command: ["guazza-ingest", "daily"]
+              env:
+                - name: DB_PATH
+                  value: /var/lib/guazza/guazza.duckdb
+                - name: MODEL_DIR
+                  value: /var/lib/guazza/models
+                - name: OUTPUT_DIR
+                  value: /var/lib/guazza/output
+              envFrom:
+                - secretRef:
+                    name: netatmo-credentials
+                - secretRef:
+                    name: healthchecks-url
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/guazza
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: guazza-data

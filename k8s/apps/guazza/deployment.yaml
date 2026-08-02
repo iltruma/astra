@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guazza-web
+  namespace: guazza
+  labels:
+    app: guazza-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guazza-web
+  template:
+    metadata:
+      labels:
+        app: guazza-web
+    spec:
+      containers:
+        - name: guazza-web
+          image: ghcr.io/iltruma/guazza:v0.12.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          # Il web serve solo i JSON: il DB lo scrivono i job (single-writer).
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/guazza/output
+              subPath: output
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          # securityContext non necessario: l'immagine gira già come utente non-root guazza.
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: guazza-data

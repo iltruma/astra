@@ -1,0 +1,24 @@
+# Placeholder — cifrato con SOPS dall'orchestratore (sops --encrypt --in-place).
+apiVersion: v1
+kind: Secret
+metadata:
+    name: healthchecks-url
+    namespace: guazza
+type: Opaque
+stringData:
+    HEALTHCHECKS_URL: ENC[AES256_GCM,data:PCYw+VDSpHiAwL3YgXq1zputy/sB1A==,iv:kYrPijRzDlDwM+6UHdn/KDGutLYARd84XefSTgF303Q=,tag:id+Hxao2F0fvuSm/Tm94dg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA2b3JKZGdYZzd5M05KN3dk
+            ZkFmSWtnczA0OE9wcmt4VjkvN2wxaGFNdWtjCmw2Z2Zic2p4OUxNMlozbUFHaEJu
+            NUYycDRQVDFRblB5Ny9JVUFpSUZKRzAKLS0tIE9KcHlvTVI3TWI5T1ljcWREVmNT
+            K1ovQTRRWDVlUHZCK2VaNng5aFc3TDAKKUGWiOnaYPdJBrbMageSrvlgKKX4zV3f
+            UKuxFIu0HGfXTZSKptCFyh8k7KqP5optlkgwjGB8EUpcPxi1X6Eqtg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1xha4vvyd2593c9cx2qnnzsfw7l5enj2yncvk3d9j62gsp0ql6y0qzmt6g5
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-08-02T17:25:18Z"
+    mac: ENC[AES256_GCM,data:89AHiyhsoPRMGmfxqKLDDazRffqmHH9Xg8pYzNgTi9mn4fbUhZuDfm+NVaGoQSRyrTz0dP9F94TqBkFiFnJnWICOC7ccvJQtt1iuSxFARnZ4xezraI+RUSNTWEZ23FuRd0DmD6wYaL/C1Zp2qNeDvRXw5zopKy9NYRCqpdP3ITg=,iv:v1oEwxfmP0KcdY7nTosEZT+0/X/5P1v/woZlu8m6Pk0=,tag:DbntWBkM5kbar+NDiUb7ww==,type:str]
+    version: 3.13.1
