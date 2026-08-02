@@ -97,8 +97,8 @@ metadata:
   name: guazza-train
   namespace: guazza
 spec:
-  # Retraining LightGBM settimanale (domenica 02:00 UTC, come da crontab.template FUTURI)
-  schedule: "0 2 * * 0"
+  # Retraining LightGBM mensile (1° del mese 02:00 UTC — README: "on-demand o mensile")
+  schedule: "0 2 1 * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
