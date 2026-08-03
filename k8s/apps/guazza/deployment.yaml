@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: guazza-web
-          image: ghcr.io/iltruma/guazza:v0.12.6
+          image: ghcr.io/iltruma/guazza:v0.13.0
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ

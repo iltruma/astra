@@ -17,7 +17,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-ingest
-              image: ghcr.io/iltruma/guazza:v0.12.6
+              image: ghcr.io/iltruma/guazza:v0.13.0
               imagePullPolicy: IfNotPresent
               command: ["guazza-ingest", "realtime"]
               env:
@@ -62,7 +62,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-pipeline
-              image: ghcr.io/iltruma/guazza:v0.12.6
+              image: ghcr.io/iltruma/guazza:v0.13.0
               imagePullPolicy: IfNotPresent
               command: ["guazza-pipeline", "run"]
               env:
@@ -108,7 +108,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-train
-              image: ghcr.io/iltruma/guazza:v0.12.6
+              image: ghcr.io/iltruma/guazza:v0.13.0
               imagePullPolicy: IfNotPresent
               command: ["guazza-train", "run"]
               env:
@@ -152,9 +152,9 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-skill
-              image: ghcr.io/iltruma/guazza:v0.12.6
+              image: ghcr.io/iltruma/guazza:v0.13.0
               imagePullPolicy: IfNotPresent
-              command: ["guazza-skill"]
+              command: ["guazza-skill", "run"]
               env:
                 - name: TZ
                   value: Europe/Rome
@@ -195,7 +195,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: guazza-ingest
-              image: ghcr.io/iltruma/guazza:v0.12.6
+              image: ghcr.io/iltruma/guazza:v0.13.0
               imagePullPolicy: IfNotPresent
               command: ["guazza-ingest", "daily"]
               env:
@@ -219,6 +219,50 @@ spec:
                 requests:
                   cpu: 50m
                   memory: 128Mi
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: guazza-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: guazza-historical
+  namespace: guazza
+spec:
+  # Backfill manuale — kubectl create job --from=cronjob/guazza-historical ...
+  schedule: "0 0 1 1 *"
+  suspend: true
+  timeZone: Europe/Rome
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: guazza-historical
+              image: ghcr.io/iltruma/guazza:v0.13.0
+              imagePullPolicy: IfNotPresent
+              command: ["guazza-ingest", "historical"]
+              env:
+                - name: TZ
+                  value: Europe/Rome
+                - name: DB_PATH
+                  value: /var/lib/guazza/guazza.duckdb
+                - name: MODEL_DIR
+                  value: /var/lib/guazza/models
+                - name: OUTPUT_DIR
+                  value: /var/lib/guazza/output
+              envFrom:
+                - secretRef:
+                    name: netatmo-credentials
+                - secretRef:
+                    name: healthchecks-url
+              volumeMounts:
+                - name: data
+                  mountPath: /var/lib/guazza
           volumes:
             - name: data
               persistentVolumeClaim:
