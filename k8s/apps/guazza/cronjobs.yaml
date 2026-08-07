@@ -33,7 +33,7 @@ spec:
                 - secretRef:
                     name: netatmo-credentials
                 - secretRef:
-                    name: healthchecks-url
+                    name: kuma-push-url
               volumeMounts:
                 - name: data
                   mountPath: /var/lib/guazza
@@ -78,7 +78,7 @@ spec:
                 - secretRef:
                     name: netatmo-credentials
                 - secretRef:
-                    name: healthchecks-url
+                    name: kuma-push-url
               volumeMounts:
                 - name: data
                   mountPath: /var/lib/guazza
@@ -122,7 +122,7 @@ spec:
                   value: /var/lib/guazza/output
               envFrom:
                 - secretRef:
-                    name: healthchecks-url
+                    name: kuma-push-url
               volumeMounts:
                 - name: data
                   mountPath: /var/lib/guazza
@@ -166,7 +166,7 @@ spec:
                   value: /var/lib/guazza/output
               envFrom:
                 - secretRef:
-                    name: healthchecks-url
+                    name: kuma-push-url
               volumeMounts:
                 - name: data
                   mountPath: /var/lib/guazza
@@ -211,7 +211,7 @@ spec:
                 - secretRef:
                     name: netatmo-credentials
                 - secretRef:
-                    name: healthchecks-url
+                    name: kuma-push-url
               volumeMounts:
                 - name: data
                   mountPath: /var/lib/guazza
@@ -259,7 +259,7 @@ spec:
                 - secretRef:
                     name: netatmo-credentials
                 - secretRef:
-                    name: healthchecks-url
+                    name: kuma-push-url
               volumeMounts:
                 - name: data
                   mountPath: /var/lib/guazza

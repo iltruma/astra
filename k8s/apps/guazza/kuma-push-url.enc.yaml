@@ -1,0 +1,22 @@
+# Uptime Kuma push monitors — dead-man switch per job cron.
+# Cifrare con: sops --encrypt --in-place k8s/apps/guazza/kuma-push-url.enc.yaml
+# (le chiavi restano in chiaro, sops cifra i valori sotto stringData).
+# Se una variabile non serve, lasciarla vuota (envFrom la inietta comunque).
+apiVersion: v1
+kind: Secret
+metadata:
+    name: kuma-push-url
+    namespace: guazza
+type: Opaque
+stringData:
+    # Fallback globale: usata da tutti i job se la per-job non esiste.
+    KUMA_PUSH_URL: ""
+    # Per-job (suffisso = job_name passato a job_run(), uppercased).
+    # Job reali: job_forecast (pipeline 6h), job_review (review giornaliero),
+    # job_historical (backfill), job_realtime (ingest 15-30min).
+    KUMA_PUSH_URL_JOB_FORECAST: ""
+    KUMA_PUSH_URL_JOB_REVIEW: ""
+    KUMA_PUSH_URL_JOB_HISTORICAL: ""
+    KUMA_PUSH_URL_JOB_REALTIME: ""
+    # Canale separato per drift ACI (push status=down, letto da review).
+    KUMA_PUSH_URL_MONITOR: ""

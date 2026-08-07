@@ -8,4 +8,4 @@ resources:
   - ingress.yaml
   - cronjobs.yaml
   - netatmo-credentials.enc.yaml
-  - healthchecks-url.enc.yaml
+  - kuma-push-url.enc.yaml

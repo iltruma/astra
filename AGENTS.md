@@ -275,7 +275,7 @@ sops --decrypt secrets/foo.enc.yaml
 
 | Variabile | Default prod | Note |
 |---|---|---|
-| `HEALTHCHECKS_URL` | non impostata (ping skip) | Dead-man switch per job cron |
+| `KUMA_PUSH_URL` | non impostata (push skip) | Dead-man switch per job cron (Uptime Kuma push); per-job: `KUMA_PUSH_URL_JOB_*` (job_forecast/job_review/job_historical/job_realtime); `KUMA_PUSH_URL_MONITOR` = drift ACI |
 
 ## Tool e workflow
 
